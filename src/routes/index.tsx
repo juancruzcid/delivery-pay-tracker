@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Calendar, FileText, Trash2, Download, X, Check, Pencil } from "lucide-react";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+
+const ENVIO_PCT = 0.05;
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -265,6 +268,8 @@ function Index() {
         <p className="mt-3 text-xs text-muted-foreground">
           {filtered.length} {filtered.length === 1 ? "registro" : "registros"}
         </p>
+
+        <MonthlyCharts payments={payments} />
       </div>
 
       {showForm && (
@@ -300,6 +305,80 @@ function SummaryCard({
   );
 }
 
+function MonthlyCharts({ payments }: { payments: Payment[] }) {
+  const data = useMemo(() => {
+    const map = new Map<string, { mes: string; vendido: number; envios: number; cantidad: number }>();
+    for (const p of payments) {
+      const key = p.fecha.slice(0, 7);
+      const row = map.get(key) ?? { mes: key, vendido: 0, envios: 0, cantidad: 0 };
+      row.vendido += Number(p.subtotal) || 0;
+      row.envios += p.retira ? 0 : (Number(p.envio) || 0);
+      row.cantidad += 1;
+      map.set(key, row);
+    }
+    return Array.from(map.values()).sort((a, b) => a.mes.localeCompare(b.mes));
+  }, [payments]);
+
+  if (data.length === 0) return null;
+
+  const formatMes = (m: string) => {
+    const [y, mm] = m.split("-");
+    return `${mm}/${y.slice(2)}`;
+  };
+  const tooltipMoney = (v: number) => `$ ${fmtMoney(v)}`;
+
+  return (
+    <div className="mt-10">
+      <h2 className="text-lg font-semibold text-foreground">Resumen mensual</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Evolución mes a mes de todos los pagos registrados.</p>
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <ChartCard title="Vendido por mes">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={60} />
+              <Tooltip formatter={tooltipMoney} labelFormatter={formatMes} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+              <Bar dataKey="vendido" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Envíos por mes">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={60} />
+              <Tooltip formatter={tooltipMoney} labelFormatter={formatMes} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+              <Bar dataKey="envios" fill="var(--info)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Pedidos por mes">
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={data} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={40} />
+              <Tooltip labelFormatter={formatMes} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+              <Line type="monotone" dataKey="cantidad" stroke="var(--success)" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+    </div>
+  );
+}
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
 function PaymentForm({
   initial,
   onClose,
@@ -313,7 +392,6 @@ function PaymentForm({
   const [fecha, setFecha] = useState(initial?.fecha ?? today);
   const [cliente, setCliente] = useState(initial?.cliente ?? "");
   const [subtotal, setSubtotal] = useState<string>(initial ? String(initial.subtotal) : "");
-  const [envio, setEnvio] = useState<string>(initial ? String(initial.envio) : "");
   const [retira, setRetira] = useState(initial?.retira ?? false);
   const [transferencia, setTransferencia] = useState<string>(initial ? String(initial.transferencia) : "");
   const [efectivo, setEfectivo] = useState<string>(initial ? String(initial.efectivo) : "");
@@ -324,7 +402,9 @@ function PaymentForm({
   const [transfPath, setTransfPath] = useState<string | null>(initial?.transferencia_pdf_path ?? null);
   const [saving, setSaving] = useState(false);
 
-  const total = (Number(subtotal) || 0) + (retira ? 0 : (Number(envio) || 0));
+  const subtotalNum = Number(subtotal) || 0;
+  const envio = retira ? 0 : Math.round(subtotalNum * ENVIO_PCT * 100) / 100;
+  const total = subtotalNum + envio;
 
   const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "pdf";
@@ -420,16 +500,10 @@ function PaymentForm({
           <Field label="Subtotal">
             <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
           </Field>
-          <Field label="Envío">
-            <input
-              type="number"
-              step="0.01"
-              value={retira ? "" : envio}
-              onChange={(e) => setEnvio(e.target.value)}
-              disabled={retira}
-              className="input tabular disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder={retira ? "Retira" : "0.00"}
-            />
+          <Field label={`Envío (${Math.round(ENVIO_PCT * 100)}% autom.)`}>
+            <div className="input tabular flex items-center bg-muted/40">
+              {retira ? <span className="text-muted-foreground">Retira</span> : <>$ {fmtMoney(envio)}</>}
+            </div>
           </Field>
           <Field label="">
             <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold">
