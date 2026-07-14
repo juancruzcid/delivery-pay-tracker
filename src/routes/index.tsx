@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Calendar, FileText, Trash2, Download, X, Check, Pencil } from "lucide-react";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+
+const ENVIO_PCT = 0.05;
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
