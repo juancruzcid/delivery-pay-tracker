@@ -282,16 +282,20 @@ function SummaryCard({
   label,
   amount,
   color,
+  isCount,
 }: {
   label: string;
   amount: number;
   color?: "info" | "success";
+  isCount?: boolean;
 }) {
   const colorClass = color === "info" ? "text-info" : color === "success" ? "text-success" : "text-foreground";
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`mt-2 font-mono text-2xl font-bold tabular ${colorClass}`}>$ {fmtMoney(amount)}</div>
+      <div className={`mt-2 font-mono text-2xl font-bold tabular ${colorClass}`}>
+        {isCount ? amount : `$ ${fmtMoney(amount)}`}
+      </div>
     </div>
   );
 }
