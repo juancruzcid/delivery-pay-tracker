@@ -11,7 +11,10 @@ type Payment = {
   id: string;
   fecha: string;
   cliente: string;
+  subtotal: number;
+  envio: number;
   monto: number;
+  retira: boolean;
   recibo: boolean;
   transferencia: number;
   efectivo: number;
