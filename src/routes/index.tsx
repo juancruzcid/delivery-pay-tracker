@@ -360,11 +360,13 @@ function PaymentForm({
     const payload = {
       fecha,
       cliente: cliente.trim(),
-      monto: Number(monto) || 0,
+      subtotal: Number(subtotal) || 0,
+      envio: retira ? 0 : (Number(envio) || 0),
+      monto: total,
+      retira,
       transferencia: Number(transferencia) || 0,
       efectivo: Number(efectivo) || 0,
       observaciones: observaciones.trim() || null,
-      recibo,
       recibo_pdf_path: newReciboPath,
       transferencia_pdf_path: newTransfPath,
     };
