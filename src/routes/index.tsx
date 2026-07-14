@@ -424,16 +424,10 @@ function PaymentForm({
           <Field label="Subtotal">
             <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
           </Field>
-          <Field label="Envío">
-            <input
-              type="number"
-              step="0.01"
-              value={retira ? "" : envio}
-              onChange={(e) => setEnvio(e.target.value)}
-              disabled={retira}
-              className="input tabular disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder={retira ? "Retira" : "0.00"}
-            />
+          <Field label={`Envío (${Math.round(ENVIO_PCT * 100)}% autom.)`}>
+            <div className="input tabular flex items-center bg-muted/40">
+              {retira ? <span className="text-muted-foreground">Retira</span> : <>$ {fmtMoney(envio)}</>}
+            </div>
           </Field>
           <Field label="">
             <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold">
