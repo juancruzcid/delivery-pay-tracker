@@ -19,12 +19,15 @@ export type Database = {
           cliente: string
           created_at: string
           efectivo: number
+          envio: number
           fecha: string
           id: string
           monto: number
           observaciones: string | null
           recibo: boolean
           recibo_pdf_path: string | null
+          retira: boolean
+          subtotal: number
           transferencia: number
           transferencia_pdf_path: string | null
           updated_at: string
@@ -33,12 +36,15 @@ export type Database = {
           cliente: string
           created_at?: string
           efectivo?: number
+          envio?: number
           fecha: string
           id?: string
           monto?: number
           observaciones?: string | null
           recibo?: boolean
           recibo_pdf_path?: string | null
+          retira?: boolean
+          subtotal?: number
           transferencia?: number
           transferencia_pdf_path?: string | null
           updated_at?: string
@@ -47,12 +53,15 @@ export type Database = {
           cliente?: string
           created_at?: string
           efectivo?: number
+          envio?: number
           fecha?: string
           id?: string
           monto?: number
           observaciones?: string | null
           recibo?: boolean
           recibo_pdf_path?: string | null
+          retira?: boolean
+          subtotal?: number
           transferencia?: number
           transferencia_pdf_path?: string | null
           updated_at?: string

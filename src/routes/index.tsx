@@ -11,7 +11,10 @@ type Payment = {
   id: string;
   fecha: string;
   cliente: string;
+  subtotal: number;
+  envio: number;
   monto: number;
+  retira: boolean;
   recibo: boolean;
   transferencia: number;
   efectivo: number;
@@ -306,16 +309,19 @@ function PaymentForm({
   const today = new Date().toISOString().slice(0, 10);
   const [fecha, setFecha] = useState(initial?.fecha ?? today);
   const [cliente, setCliente] = useState(initial?.cliente ?? "");
-  const [monto, setMonto] = useState<string>(initial ? String(initial.monto) : "");
+  const [subtotal, setSubtotal] = useState<string>(initial ? String(initial.subtotal) : "");
+  const [envio, setEnvio] = useState<string>(initial ? String(initial.envio) : "");
+  const [retira, setRetira] = useState(initial?.retira ?? false);
   const [transferencia, setTransferencia] = useState<string>(initial ? String(initial.transferencia) : "");
   const [efectivo, setEfectivo] = useState<string>(initial ? String(initial.efectivo) : "");
   const [observaciones, setObservaciones] = useState(initial?.observaciones ?? "");
-  const [recibo, setRecibo] = useState(initial?.recibo ?? false);
   const [reciboFile, setReciboFile] = useState<File | null>(null);
   const [transfFile, setTransfFile] = useState<File | null>(null);
   const [reciboPath, setReciboPath] = useState<string | null>(initial?.recibo_pdf_path ?? null);
   const [transfPath, setTransfPath] = useState<string | null>(initial?.transferencia_pdf_path ?? null);
   const [saving, setSaving] = useState(false);
+
+  const total = (Number(subtotal) || 0) + (retira ? 0 : (Number(envio) || 0));
 
   const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "pdf";
@@ -354,11 +360,13 @@ function PaymentForm({
     const payload = {
       fecha,
       cliente: cliente.trim(),
-      monto: Number(monto) || 0,
+      subtotal: Number(subtotal) || 0,
+      envio: retira ? 0 : (Number(envio) || 0),
+      monto: total,
+      retira,
       transferencia: Number(transferencia) || 0,
       efectivo: Number(efectivo) || 0,
       observaciones: observaciones.trim() || null,
-      recibo,
       recibo_pdf_path: newReciboPath,
       transferencia_pdf_path: newTransfPath,
     };
@@ -406,19 +414,35 @@ function PaymentForm({
           <Field label="Cliente">
             <input type="text" value={cliente} onChange={(e) => setCliente(e.target.value)} required className="input" placeholder="Nombre" />
           </Field>
-          <Field label="Monto">
-            <input type="number" step="0.01" value={monto} onChange={(e) => setMonto(e.target.value)} className="input tabular" placeholder="0.00" />
+          <Field label="Subtotal">
+            <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
+          </Field>
+          <Field label="Envío">
+            <input
+              type="number"
+              step="0.01"
+              value={retira ? "" : envio}
+              onChange={(e) => setEnvio(e.target.value)}
+              disabled={retira}
+              className="input tabular disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder={retira ? "Retira" : "0.00"}
+            />
           </Field>
           <Field label="">
-            <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm">
+            <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold">
               <input
                 type="checkbox"
-                checked={recibo}
-                onChange={(e) => setRecibo(e.target.checked)}
+                checked={retira}
+                onChange={(e) => setRetira(e.target.checked)}
                 className="h-4 w-4 rounded border-border text-primary"
               />
-              Recibo entregado
+              RETIRA
             </label>
+          </Field>
+          <Field label="Total">
+            <div className="input tabular flex items-center bg-muted/40 font-semibold">
+              $ {fmtMoney(total)}
+            </div>
           </Field>
           <Field label="Transferencia">
             <input type="number" step="0.01" value={transferencia} onChange={(e) => setTransferencia(e.target.value)} className="input tabular" placeholder="0.00" />
