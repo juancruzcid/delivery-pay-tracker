@@ -414,19 +414,35 @@ function PaymentForm({
           <Field label="Cliente">
             <input type="text" value={cliente} onChange={(e) => setCliente(e.target.value)} required className="input" placeholder="Nombre" />
           </Field>
-          <Field label="Monto">
-            <input type="number" step="0.01" value={monto} onChange={(e) => setMonto(e.target.value)} className="input tabular" placeholder="0.00" />
+          <Field label="Subtotal">
+            <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
+          </Field>
+          <Field label="Envío">
+            <input
+              type="number"
+              step="0.01"
+              value={retira ? "" : envio}
+              onChange={(e) => setEnvio(e.target.value)}
+              disabled={retira}
+              className="input tabular disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder={retira ? "Retira" : "0.00"}
+            />
           </Field>
           <Field label="">
-            <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm">
+            <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold">
               <input
                 type="checkbox"
-                checked={recibo}
-                onChange={(e) => setRecibo(e.target.checked)}
+                checked={retira}
+                onChange={(e) => setRetira(e.target.checked)}
                 className="h-4 w-4 rounded border-border text-primary"
               />
-              Recibo entregado
+              RETIRA
             </label>
+          </Field>
+          <Field label="Total">
+            <div className="input tabular flex items-center bg-muted/40 font-semibold">
+              $ {fmtMoney(total)}
+            </div>
           </Field>
           <Field label="Transferencia">
             <input type="number" step="0.01" value={transferencia} onChange={(e) => setTransferencia(e.target.value)} className="input tabular" placeholder="0.00" />
