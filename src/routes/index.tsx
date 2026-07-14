@@ -70,12 +70,11 @@ function Index() {
   const totals = useMemo(() => {
     return filtered.reduce(
       (acc, p) => {
-        acc.vendido += Number(p.monto);
-        acc.transferencia += Number(p.transferencia);
-        acc.efectivo += Number(p.efectivo);
+        acc.vendido += Number(p.subtotal);
+        acc.envios += p.retira ? 0 : Number(p.envio);
         return acc;
       },
-      { vendido: 0, transferencia: 0, efectivo: 0 }
+      { vendido: 0, envios: 0 }
     );
   }, [filtered]);
 
