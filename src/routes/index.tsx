@@ -317,7 +317,6 @@ function PaymentForm({
   const [cliente, setCliente] = useState(initial?.cliente ?? "");
   const [subtotal, setSubtotal] = useState<string>(initial ? String(initial.subtotal) : "");
   const [retira, setRetira] = useState(initial?.retira ?? false);
-  const [retira, setRetira] = useState(initial?.retira ?? false);
   const [transferencia, setTransferencia] = useState<string>(initial ? String(initial.transferencia) : "");
   const [efectivo, setEfectivo] = useState<string>(initial ? String(initial.efectivo) : "");
   const [observaciones, setObservaciones] = useState(initial?.observaciones ?? "");
