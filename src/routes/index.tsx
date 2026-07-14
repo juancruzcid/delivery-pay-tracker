@@ -128,9 +128,9 @@ function Index() {
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="VENDIDO" amount={totals.vendido} />
-          <SummaryCard label="TRANSFERENCIAS" amount={totals.transferencia} color="info" />
-          <SummaryCard label="EFECTIVO" amount={totals.efectivo} color="success" />
-          <SummaryCard label="TOTAL COBRADO" amount={totals.transferencia + totals.efectivo} color="success" />
+          <SummaryCard label="ENVÍOS" amount={totals.envios} color="info" />
+          <SummaryCard label="TOTAL" amount={totals.vendido + totals.envios} color="success" />
+          <SummaryCard label="CANTIDAD" amount={filtered.length} isCount />
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
