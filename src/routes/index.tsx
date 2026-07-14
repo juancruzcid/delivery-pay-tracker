@@ -70,12 +70,11 @@ function Index() {
   const totals = useMemo(() => {
     return filtered.reduce(
       (acc, p) => {
-        acc.vendido += Number(p.monto);
-        acc.transferencia += Number(p.transferencia);
-        acc.efectivo += Number(p.efectivo);
+        acc.vendido += Number(p.subtotal);
+        acc.envios += p.retira ? 0 : Number(p.envio);
         return acc;
       },
-      { vendido: 0, transferencia: 0, efectivo: 0 }
+      { vendido: 0, envios: 0 }
     );
   }, [filtered]);
 
@@ -129,9 +128,9 @@ function Index() {
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="VENDIDO" amount={totals.vendido} />
-          <SummaryCard label="TRANSFERENCIAS" amount={totals.transferencia} color="info" />
-          <SummaryCard label="EFECTIVO" amount={totals.efectivo} color="success" />
-          <SummaryCard label="TOTAL COBRADO" amount={totals.transferencia + totals.efectivo} color="success" />
+          <SummaryCard label="ENVÍOS" amount={totals.envios} color="info" />
+          <SummaryCard label="TOTAL" amount={totals.vendido + totals.envios} color="success" />
+          <SummaryCard label="CANTIDAD" amount={filtered.length} isCount />
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -283,16 +282,20 @@ function SummaryCard({
   label,
   amount,
   color,
+  isCount,
 }: {
   label: string;
   amount: number;
   color?: "info" | "success";
+  isCount?: boolean;
 }) {
   const colorClass = color === "info" ? "text-info" : color === "success" ? "text-success" : "text-foreground";
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`mt-2 font-mono text-2xl font-bold tabular ${colorClass}`}>$ {fmtMoney(amount)}</div>
+      <div className={`mt-2 font-mono text-2xl font-bold tabular ${colorClass}`}>
+        {isCount ? amount : `$ ${fmtMoney(amount)}`}
+      </div>
     </div>
   );
 }
