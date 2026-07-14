@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      payments: {
+        Row: {
+          cliente: string
+          created_at: string
+          efectivo: number
+          fecha: string
+          id: string
+          monto: number
+          observaciones: string | null
+          recibo: boolean
+          recibo_pdf_path: string | null
+          transferencia: number
+          transferencia_pdf_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          cliente: string
+          created_at?: string
+          efectivo?: number
+          fecha: string
+          id?: string
+          monto?: number
+          observaciones?: string | null
+          recibo?: boolean
+          recibo_pdf_path?: string | null
+          transferencia?: number
+          transferencia_pdf_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cliente?: string
+          created_at?: string
+          efectivo?: number
+          fecha?: string
+          id?: string
+          monto?: number
+          observaciones?: string | null
+          recibo?: boolean
+          recibo_pdf_path?: string | null
+          transferencia?: number
+          transferencia_pdf_path?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
