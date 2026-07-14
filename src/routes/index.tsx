@@ -309,16 +309,19 @@ function PaymentForm({
   const today = new Date().toISOString().slice(0, 10);
   const [fecha, setFecha] = useState(initial?.fecha ?? today);
   const [cliente, setCliente] = useState(initial?.cliente ?? "");
-  const [monto, setMonto] = useState<string>(initial ? String(initial.monto) : "");
+  const [subtotal, setSubtotal] = useState<string>(initial ? String(initial.subtotal) : "");
+  const [envio, setEnvio] = useState<string>(initial ? String(initial.envio) : "");
+  const [retira, setRetira] = useState(initial?.retira ?? false);
   const [transferencia, setTransferencia] = useState<string>(initial ? String(initial.transferencia) : "");
   const [efectivo, setEfectivo] = useState<string>(initial ? String(initial.efectivo) : "");
   const [observaciones, setObservaciones] = useState(initial?.observaciones ?? "");
-  const [recibo, setRecibo] = useState(initial?.recibo ?? false);
   const [reciboFile, setReciboFile] = useState<File | null>(null);
   const [transfFile, setTransfFile] = useState<File | null>(null);
   const [reciboPath, setReciboPath] = useState<string | null>(initial?.recibo_pdf_path ?? null);
   const [transfPath, setTransfPath] = useState<string | null>(initial?.transferencia_pdf_path ?? null);
   const [saving, setSaving] = useState(false);
+
+  const total = (Number(subtotal) || 0) + (retira ? 0 : (Number(envio) || 0));
 
   const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "pdf";
