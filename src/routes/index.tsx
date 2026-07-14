@@ -305,6 +305,80 @@ function SummaryCard({
   );
 }
 
+function MonthlyCharts({ payments }: { payments: Payment[] }) {
+  const data = useMemo(() => {
+    const map = new Map<string, { mes: string; vendido: number; envios: number; cantidad: number }>();
+    for (const p of payments) {
+      const key = p.fecha.slice(0, 7);
+      const row = map.get(key) ?? { mes: key, vendido: 0, envios: 0, cantidad: 0 };
+      row.vendido += Number(p.subtotal) || 0;
+      row.envios += p.retira ? 0 : (Number(p.envio) || 0);
+      row.cantidad += 1;
+      map.set(key, row);
+    }
+    return Array.from(map.values()).sort((a, b) => a.mes.localeCompare(b.mes));
+  }, [payments]);
+
+  if (data.length === 0) return null;
+
+  const formatMes = (m: string) => {
+    const [y, mm] = m.split("-");
+    return `${mm}/${y.slice(2)}`;
+  };
+  const tooltipMoney = (v: number) => `$ ${fmtMoney(v)}`;
+
+  return (
+    <div className="mt-10">
+      <h2 className="text-lg font-semibold text-foreground">Resumen mensual</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Evolución mes a mes de todos los pagos registrados.</p>
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <ChartCard title="Vendido por mes">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={60} />
+              <Tooltip formatter={tooltipMoney} labelFormatter={formatMes} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+              <Bar dataKey="vendido" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Envíos por mes">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={60} />
+              <Tooltip formatter={tooltipMoney} labelFormatter={formatMes} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+              <Bar dataKey="envios" fill="var(--info)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Pedidos por mes">
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={data} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={40} />
+              <Tooltip labelFormatter={formatMes} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+              <Line type="monotone" dataKey="cantidad" stroke="var(--success)" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+    </div>
+  );
+}
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
 function PaymentForm({
   initial,
   onClose,
