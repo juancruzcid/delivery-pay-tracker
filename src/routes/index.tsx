@@ -327,7 +327,9 @@ function PaymentForm({
   const [transfPath, setTransfPath] = useState<string | null>(initial?.transferencia_pdf_path ?? null);
   const [saving, setSaving] = useState(false);
 
-  const total = (Number(subtotal) || 0) + (retira ? 0 : (Number(envio) || 0));
+  const subtotalNum = Number(subtotal) || 0;
+  const envio = retira ? 0 : Math.round(subtotalNum * ENVIO_PCT * 100) / 100;
+  const total = subtotalNum + envio;
 
   const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "pdf";
