@@ -268,6 +268,8 @@ function Index() {
         <p className="mt-3 text-xs text-muted-foreground">
           {filtered.length} {filtered.length === 1 ? "registro" : "registros"}
         </p>
+
+        <MonthlyCharts payments={payments} />
       </div>
 
       {showForm && (
