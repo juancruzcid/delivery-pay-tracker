@@ -10,6 +10,8 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+type EstadoEnvio = "retiro" | "pendiente" | "enviado";
+
 type Payment = {
   id: string;
   fecha: string;
@@ -18,6 +20,7 @@ type Payment = {
   envio: number;
   monto: number;
   retira: boolean;
+  estado_envio: EstadoEnvio;
   recibo: boolean;
   transferencia: number;
   efectivo: number;
@@ -25,6 +28,19 @@ type Payment = {
   recibo_pdf_path: string | null;
   transferencia_pdf_path: string | null;
 };
+
+const ESTADO_LABEL: Record<EstadoEnvio, string> = {
+  retiro: "Retiro",
+  pendiente: "Pendiente",
+  enviado: "Enviado",
+};
+
+const ESTADO_CLASS: Record<EstadoEnvio, string> = {
+  retiro: "bg-muted text-foreground border-border",
+  pendiente: "bg-warning/15 text-warning border-warning/30",
+  enviado: "bg-success/15 text-success border-success/30",
+};
+
 
 const BUCKET = "payment-docs";
 
