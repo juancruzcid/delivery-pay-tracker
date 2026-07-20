@@ -404,10 +404,12 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 
 function PaymentForm({
   initial,
+  clientes,
   onClose,
   onSaved,
 }: {
   initial: Payment | null;
+  clientes: string[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -415,7 +417,8 @@ function PaymentForm({
   const [fecha, setFecha] = useState(initial?.fecha ?? today);
   const [cliente, setCliente] = useState(initial?.cliente ?? "");
   const [subtotal, setSubtotal] = useState<string>(initial ? String(initial.subtotal) : "");
-  const [retira, setRetira] = useState(initial?.retira ?? false);
+  const [estadoEnvio, setEstadoEnvio] = useState<EstadoEnvio>(initial?.estado_envio ?? "pendiente");
+  const retira = estadoEnvio === "retiro";
   const [transferencia, setTransferencia] = useState<string>(initial ? String(initial.transferencia) : "");
   const [efectivo, setEfectivo] = useState<string>(initial ? String(initial.efectivo) : "");
   const [observaciones, setObservaciones] = useState(initial?.observaciones ?? "");
