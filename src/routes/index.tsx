@@ -335,7 +335,7 @@ function MonthlyCharts({ payments }: { payments: Payment[] }) {
       const key = p.fecha.slice(0, 7);
       const row = map.get(key) ?? { mes: key, vendido: 0, envios: 0, cantidad: 0 };
       row.vendido += Number(p.subtotal) || 0;
-      row.envios += p.estado_envio === "enviado" ? (Number(p.envio) || 0) : 0;
+      row.envios += Number(p.envio) || 0;
       row.cantidad += 1;
       map.set(key, row);
     }
