@@ -90,7 +90,7 @@ function Index() {
     return filtered.reduce(
       (acc, p) => {
         acc.vendido += Number(p.subtotal);
-        acc.envios += p.retira ? 0 : Number(p.envio);
+        acc.envios += p.estado_envio === "enviado" ? Number(p.envio) : 0;
         return acc;
       },
       { vendido: 0, envios: 0 }
@@ -102,10 +102,17 @@ function Index() {
     return Array.from(set).sort().reverse();
   }, [payments]);
 
-  const toggleRecibo = async (p: Payment) => {
-    const { error } = await supabase.from("payments").update({ recibo: !p.recibo }).eq("id", p.id);
-    if (!error) setPayments((prev) => prev.map((x) => (x.id === p.id ? { ...x, recibo: !p.recibo } : x)));
+  const clientes = useMemo(() => {
+    const set = new Set(payments.map((p) => p.cliente).filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [payments]);
+
+  const setEstado = async (p: Payment, estado: EstadoEnvio) => {
+    const patch = { estado_envio: estado, retira: estado === "retiro" };
+    const { error } = await supabase.from("payments").update(patch).eq("id", p.id);
+    if (!error) setPayments((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
   };
+
 
   const remove = async (p: Payment) => {
     if (!confirm(`¿Eliminar el pago de ${p.cliente}?`)) return;
