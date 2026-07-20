@@ -522,7 +522,21 @@ function PaymentForm({
             <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required className="input" />
           </Field>
           <Field label="Cliente">
-            <input type="text" value={cliente} onChange={(e) => setCliente(e.target.value)} required className="input" placeholder="Nombre" />
+            <input
+              type="text"
+              value={cliente}
+              onChange={(e) => setCliente(e.target.value)}
+              required
+              className="input"
+              placeholder="Nombre"
+              list="clientes-list"
+              autoComplete="off"
+            />
+            <datalist id="clientes-list">
+              {clientes.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </Field>
           <Field label="Subtotal">
             <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
@@ -532,16 +546,21 @@ function PaymentForm({
               {retira ? <span className="text-muted-foreground">Retira</span> : <>$ {fmtMoney(envio)}</>}
             </div>
           </Field>
-          <Field label="">
-            <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold">
-              <input
-                type="checkbox"
-                checked={retira}
-                onChange={(e) => setRetira(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary"
-              />
-              RETIRA
-            </label>
+          <Field label="Estado de envío">
+            <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
+              {(["retiro", "pendiente", "enviado"] as EstadoEnvio[]).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setEstadoEnvio(s)}
+                  className={`flex-1 rounded-md px-2 py-1 text-xs font-semibold transition ${
+                    estadoEnvio === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {ESTADO_LABEL[s]}
+                </button>
+              ))}
+            </div>
           </Field>
           <Field label="Total">
             <div className="input tabular flex items-center bg-muted/40 font-semibold">
