@@ -90,7 +90,7 @@ function Index() {
     return filtered.reduce(
       (acc, p) => {
         acc.vendido += Number(p.subtotal);
-        acc.envios += p.estado_envio === "enviado" ? Number(p.envio) : 0;
+        acc.envios += Number(p.envio);
         return acc;
       },
       { vendido: 0, envios: 0 }
