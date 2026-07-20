@@ -297,6 +297,7 @@ function Index() {
       {showForm && (
         <PaymentForm
           initial={editing}
+          clientes={clientes}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); load(); }}
         />
