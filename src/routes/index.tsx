@@ -199,7 +199,7 @@ function Index() {
                   <th className="px-4 py-3">Fecha</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 text-right">Monto</th>
-                  <th className="px-4 py-3 text-center">Recibo</th>
+                  <th className="px-4 py-3 text-center">Envío</th>
                   <th className="px-4 py-3 text-right">Transferencia</th>
                   <th className="px-4 py-3 text-right">Efectivo</th>
                   <th className="px-4 py-3">Observaciones</th>
@@ -219,18 +219,17 @@ function Index() {
                       <td className="px-4 py-3 font-sans font-medium">{p.cliente}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">$ {fmtMoney(p.monto)}</td>
                       <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => toggleRecibo(p)}
-                          className={`inline-flex h-5 w-5 items-center justify-center rounded-md border-2 transition ${
-                            p.recibo
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-background hover:border-primary/50"
-                          }`}
-                          aria-label="Recibo"
+                        <select
+                          value={p.estado_envio}
+                          onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
+                          className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
                         >
-                          {p.recibo && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                        </button>
+                          <option value="retiro">Retiro</option>
+                          <option value="pendiente">Pendiente</option>
+                          <option value="enviado">Enviado</option>
+                        </select>
                       </td>
+
                       <td className="whitespace-nowrap px-4 py-3 text-right text-info">
                         {p.transferencia > 0 ? `$ ${fmtMoney(p.transferencia)}` : <span className="text-muted-foreground">—</span>}
                       </td>
