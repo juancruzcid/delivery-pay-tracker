@@ -473,6 +473,7 @@ function PaymentForm({
       envio: retira ? 0 : (Number(envio) || 0),
       monto: total,
       retira,
+      estado_envio: estadoEnvio,
       transferencia: Number(transferencia) || 0,
       efectivo: Number(efectivo) || 0,
       observaciones: observaciones.trim() || null,
