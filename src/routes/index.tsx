@@ -10,6 +10,8 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+type EstadoEnvio = "retiro" | "pendiente" | "enviado";
+
 type Payment = {
   id: string;
   fecha: string;
@@ -18,6 +20,7 @@ type Payment = {
   envio: number;
   monto: number;
   retira: boolean;
+  estado_envio: EstadoEnvio;
   recibo: boolean;
   transferencia: number;
   efectivo: number;
@@ -25,6 +28,19 @@ type Payment = {
   recibo_pdf_path: string | null;
   transferencia_pdf_path: string | null;
 };
+
+const ESTADO_LABEL: Record<EstadoEnvio, string> = {
+  retiro: "Retiro",
+  pendiente: "Pendiente",
+  enviado: "Enviado",
+};
+
+const ESTADO_CLASS: Record<EstadoEnvio, string> = {
+  retiro: "bg-muted text-foreground border-border",
+  pendiente: "bg-warning/15 text-warning border-warning/30",
+  enviado: "bg-success/15 text-success border-success/30",
+};
+
 
 const BUCKET = "payment-docs";
 
@@ -74,7 +90,7 @@ function Index() {
     return filtered.reduce(
       (acc, p) => {
         acc.vendido += Number(p.subtotal);
-        acc.envios += p.retira ? 0 : Number(p.envio);
+        acc.envios += p.estado_envio === "enviado" ? Number(p.envio) : 0;
         return acc;
       },
       { vendido: 0, envios: 0 }
@@ -86,10 +102,17 @@ function Index() {
     return Array.from(set).sort().reverse();
   }, [payments]);
 
-  const toggleRecibo = async (p: Payment) => {
-    const { error } = await supabase.from("payments").update({ recibo: !p.recibo }).eq("id", p.id);
-    if (!error) setPayments((prev) => prev.map((x) => (x.id === p.id ? { ...x, recibo: !p.recibo } : x)));
+  const clientes = useMemo(() => {
+    const set = new Set(payments.map((p) => p.cliente).filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [payments]);
+
+  const setEstado = async (p: Payment, estado: EstadoEnvio) => {
+    const patch = { estado_envio: estado, retira: estado === "retiro" };
+    const { error } = await supabase.from("payments").update(patch).eq("id", p.id);
+    if (!error) setPayments((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
   };
+
 
   const remove = async (p: Payment) => {
     if (!confirm(`¿Eliminar el pago de ${p.cliente}?`)) return;
@@ -176,7 +199,7 @@ function Index() {
                   <th className="px-4 py-3">Fecha</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 text-right">Monto</th>
-                  <th className="px-4 py-3 text-center">Recibo</th>
+                  <th className="px-4 py-3 text-center">Envío</th>
                   <th className="px-4 py-3 text-right">Transferencia</th>
                   <th className="px-4 py-3 text-right">Efectivo</th>
                   <th className="px-4 py-3">Observaciones</th>
@@ -196,18 +219,17 @@ function Index() {
                       <td className="px-4 py-3 font-sans font-medium">{p.cliente}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">$ {fmtMoney(p.monto)}</td>
                       <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => toggleRecibo(p)}
-                          className={`inline-flex h-5 w-5 items-center justify-center rounded-md border-2 transition ${
-                            p.recibo
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-background hover:border-primary/50"
-                          }`}
-                          aria-label="Recibo"
+                        <select
+                          value={p.estado_envio}
+                          onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
+                          className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
                         >
-                          {p.recibo && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                        </button>
+                          <option value="retiro">Retiro</option>
+                          <option value="pendiente">Pendiente</option>
+                          <option value="enviado">Enviado</option>
+                        </select>
                       </td>
+
                       <td className="whitespace-nowrap px-4 py-3 text-right text-info">
                         {p.transferencia > 0 ? `$ ${fmtMoney(p.transferencia)}` : <span className="text-muted-foreground">—</span>}
                       </td>
@@ -275,6 +297,7 @@ function Index() {
       {showForm && (
         <PaymentForm
           initial={editing}
+          clientes={clientes}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); load(); }}
         />
@@ -312,7 +335,7 @@ function MonthlyCharts({ payments }: { payments: Payment[] }) {
       const key = p.fecha.slice(0, 7);
       const row = map.get(key) ?? { mes: key, vendido: 0, envios: 0, cantidad: 0 };
       row.vendido += Number(p.subtotal) || 0;
-      row.envios += p.retira ? 0 : (Number(p.envio) || 0);
+      row.envios += p.estado_envio === "enviado" ? (Number(p.envio) || 0) : 0;
       row.cantidad += 1;
       map.set(key, row);
     }
@@ -381,10 +404,12 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 
 function PaymentForm({
   initial,
+  clientes,
   onClose,
   onSaved,
 }: {
   initial: Payment | null;
+  clientes: string[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -392,7 +417,8 @@ function PaymentForm({
   const [fecha, setFecha] = useState(initial?.fecha ?? today);
   const [cliente, setCliente] = useState(initial?.cliente ?? "");
   const [subtotal, setSubtotal] = useState<string>(initial ? String(initial.subtotal) : "");
-  const [retira, setRetira] = useState(initial?.retira ?? false);
+  const [estadoEnvio, setEstadoEnvio] = useState<EstadoEnvio>(initial?.estado_envio ?? "pendiente");
+  const retira = estadoEnvio === "retiro";
   const [transferencia, setTransferencia] = useState<string>(initial ? String(initial.transferencia) : "");
   const [efectivo, setEfectivo] = useState<string>(initial ? String(initial.efectivo) : "");
   const [observaciones, setObservaciones] = useState(initial?.observaciones ?? "");
@@ -447,6 +473,7 @@ function PaymentForm({
       envio: retira ? 0 : (Number(envio) || 0),
       monto: total,
       retira,
+      estado_envio: estadoEnvio,
       transferencia: Number(transferencia) || 0,
       efectivo: Number(efectivo) || 0,
       observaciones: observaciones.trim() || null,
@@ -495,7 +522,21 @@ function PaymentForm({
             <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required className="input" />
           </Field>
           <Field label="Cliente">
-            <input type="text" value={cliente} onChange={(e) => setCliente(e.target.value)} required className="input" placeholder="Nombre" />
+            <input
+              type="text"
+              value={cliente}
+              onChange={(e) => setCliente(e.target.value)}
+              required
+              className="input"
+              placeholder="Nombre"
+              list="clientes-list"
+              autoComplete="off"
+            />
+            <datalist id="clientes-list">
+              {clientes.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </Field>
           <Field label="Subtotal">
             <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
@@ -505,16 +546,21 @@ function PaymentForm({
               {retira ? <span className="text-muted-foreground">Retira</span> : <>$ {fmtMoney(envio)}</>}
             </div>
           </Field>
-          <Field label="">
-            <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold">
-              <input
-                type="checkbox"
-                checked={retira}
-                onChange={(e) => setRetira(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary"
-              />
-              RETIRA
-            </label>
+          <Field label="Estado de envío">
+            <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
+              {(["retiro", "pendiente", "enviado"] as EstadoEnvio[]).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setEstadoEnvio(s)}
+                  className={`flex-1 rounded-md px-2 py-1 text-xs font-semibold transition ${
+                    estadoEnvio === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {ESTADO_LABEL[s]}
+                </button>
+              ))}
+            </div>
           </Field>
           <Field label="Total">
             <div className="input tabular flex items-center bg-muted/40 font-semibold">

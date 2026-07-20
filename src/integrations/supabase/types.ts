@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           efectivo: number
           envio: number
+          estado_envio: string
           fecha: string
           id: string
           monto: number
@@ -37,6 +38,7 @@ export type Database = {
           created_at?: string
           efectivo?: number
           envio?: number
+          estado_envio?: string
           fecha: string
           id?: string
           monto?: number
@@ -54,6 +56,7 @@ export type Database = {
           created_at?: string
           efectivo?: number
           envio?: number
+          estado_envio?: string
           fecha?: string
           id?: string
           monto?: number
