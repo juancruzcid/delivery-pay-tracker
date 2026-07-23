@@ -247,7 +247,7 @@ function Index() {
                   <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">No hay pagos registrados.</td></tr>
                 ) : (
                   filtered.map((p) => (
-                    <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                    <tr key={p.id} className={`border-b border-border last:border-0 hover:bg-muted/30 ${isMissingDocs(p) ? "bg-warning/5" : ""}`}>
                       <td className="whitespace-nowrap px-4 py-3">{fmtDate(p.fecha)}</td>
                       <td className="px-4 py-3 font-sans font-medium">{p.cliente}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">$ {fmtMoney(p.monto)}</td>
