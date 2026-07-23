@@ -236,7 +236,7 @@ function Index() {
                       <td className="whitespace-nowrap px-4 py-3 text-right text-success">
                         {p.efectivo > 0 ? `$ ${fmtMoney(p.efectivo)}` : <span className="text-muted-foreground">—</span>}
                       </td>
-                      <td className="max-w-[200px] truncate px-4 py-3 font-sans text-muted-foreground" title={p.observaciones ?? ""}>
+                      <td className="w-[220px] min-w-[180px] max-w-[260px] whitespace-normal break-words px-4 py-3 font-sans text-xs leading-snug text-muted-foreground">
                         {p.observaciones || <span className="text-muted-foreground/50">—</span>}
                       </td>
                       <td className="px-4 py-3">
