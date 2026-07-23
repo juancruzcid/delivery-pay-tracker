@@ -264,7 +264,7 @@ function Index() {
                           )}
                         </div>
                       </td>
-                      <td className="px-2 py-3 text-right">
+                      <td className="whitespace-nowrap px-2 py-3 text-right">
                         <button
                           onClick={() => { setEditing(p); setShowForm(true); }}
                           className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
