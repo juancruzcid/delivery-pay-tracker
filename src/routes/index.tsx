@@ -90,9 +90,12 @@ function Index() {
       if (search && !p.cliente.toLowerCase().includes(search.toLowerCase())) return false;
       if (dateFilter && p.fecha !== dateFilter) return false;
       if (monthFilter && !p.fecha.startsWith(monthFilter)) return false;
+      if (missingDocsOnly && !isMissingDocs(p)) return false;
       return true;
     });
-  }, [payments, search, dateFilter, monthFilter]);
+  }, [payments, search, dateFilter, monthFilter, missingDocsOnly]);
+
+  const missingDocsCount = useMemo(() => payments.filter(isMissingDocs).length, [payments]);
 
   const totals = useMemo(() => {
     return filtered.reduce(
