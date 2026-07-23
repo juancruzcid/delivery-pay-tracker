@@ -30,6 +30,8 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
