@@ -547,10 +547,21 @@ function PaymentForm({
           <Field label="Subtotal">
             <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
           </Field>
-          <Field label={`Envío (${Math.round(ENVIO_PCT * 100)}% autom.)`}>
-            <div className="input tabular flex items-center bg-muted/40">
-              {retira ? <span className="text-muted-foreground">Retira</span> : <>$ {fmtMoney(envio)}</>}
-            </div>
+          <Field label={`Envío (${Math.round(ENVIO_PCT * 100)}% autom., editable)`}>
+            {retira ? (
+              <div className="input tabular flex items-center bg-muted/40 text-muted-foreground">Retira</div>
+            ) : (
+              <input
+                type="number"
+                step="0.01"
+                value={envioManual !== null ? envioManual : String(envioAuto)}
+                onChange={(e) => setEnvioManual(e.target.value)}
+                onDoubleClick={() => setEnvioManual(null)}
+                title="Doble clic para volver al 5% automático"
+                className="input tabular"
+                placeholder="0.00"
+              />
+            )}
           </Field>
           <Field label="Estado de envío">
             <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
