@@ -202,6 +202,28 @@ function Index() {
           </select>
         </div>
 
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMissingDocsOnly((v) => !v)}
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+              missingDocsOnly
+                ? "border-warning/40 bg-warning/15 text-warning"
+                : "border-border bg-card text-muted-foreground hover:bg-accent"
+            }`}
+            title="Muestra solo pagos con transferencia que no tienen recibo o comprobante cargado"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            {missingDocsOnly ? "Mostrando faltantes" : "Faltan documentos"}
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              missingDocsCount > 0 ? "bg-warning text-warning-foreground" : "bg-muted text-muted-foreground"
+            }`}>
+              {missingDocsCount}
+            </span>
+          </button>
+        </div>
+
+
         <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
