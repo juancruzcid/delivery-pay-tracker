@@ -236,7 +236,7 @@ function Index() {
                       <td className="whitespace-nowrap px-4 py-3 text-right text-success">
                         {p.efectivo > 0 ? `$ ${fmtMoney(p.efectivo)}` : <span className="text-muted-foreground">—</span>}
                       </td>
-                      <td className="max-w-[200px] truncate px-4 py-3 font-sans text-muted-foreground" title={p.observaciones ?? ""}>
+                      <td className="w-[220px] min-w-[180px] max-w-[260px] whitespace-normal break-words px-4 py-3 font-sans text-xs leading-snug text-muted-foreground">
                         {p.observaciones || <span className="text-muted-foreground/50">—</span>}
                       </td>
                       <td className="px-4 py-3">
@@ -264,7 +264,7 @@ function Index() {
                           )}
                         </div>
                       </td>
-                      <td className="px-2 py-3 text-right">
+                      <td className="whitespace-nowrap px-2 py-3 text-right">
                         <button
                           onClick={() => { setEditing(p); setShowForm(true); }}
                           className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -429,7 +429,13 @@ function PaymentForm({
   const [saving, setSaving] = useState(false);
 
   const subtotalNum = Number(subtotal) || 0;
-  const envio = retira ? 0 : Math.round(subtotalNum * ENVIO_PCT * 100) / 100;
+  const envioAuto = Math.round(subtotalNum * ENVIO_PCT * 100) / 100;
+  const [envioManual, setEnvioManual] = useState<string | null>(
+    initial && !initial.retira && Math.abs(Number(initial.envio) - Math.round(Number(initial.subtotal) * ENVIO_PCT * 100) / 100) > 0.001
+      ? String(initial.envio)
+      : null
+  );
+  const envio = retira ? 0 : envioManual !== null ? (Number(envioManual) || 0) : envioAuto;
   const total = subtotalNum + envio;
 
   const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
@@ -541,10 +547,21 @@ function PaymentForm({
           <Field label="Subtotal">
             <input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} className="input tabular" placeholder="0.00" />
           </Field>
-          <Field label={`Envío (${Math.round(ENVIO_PCT * 100)}% autom.)`}>
-            <div className="input tabular flex items-center bg-muted/40">
-              {retira ? <span className="text-muted-foreground">Retira</span> : <>$ {fmtMoney(envio)}</>}
-            </div>
+          <Field label={`Envío (${Math.round(ENVIO_PCT * 100)}% autom., editable)`}>
+            {retira ? (
+              <div className="input tabular flex items-center bg-muted/40 text-muted-foreground">Retira</div>
+            ) : (
+              <input
+                type="number"
+                step="0.01"
+                value={envioManual !== null ? envioManual : String(envioAuto)}
+                onChange={(e) => setEnvioManual(e.target.value)}
+                onDoubleClick={() => setEnvioManual(null)}
+                title="Doble clic para volver al 5% automático"
+                className="input tabular"
+                placeholder="0.00"
+              />
+            )}
           </Field>
           <Field label="Estado de envío">
             <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
