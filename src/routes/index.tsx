@@ -429,7 +429,13 @@ function PaymentForm({
   const [saving, setSaving] = useState(false);
 
   const subtotalNum = Number(subtotal) || 0;
-  const envio = retira ? 0 : Math.round(subtotalNum * ENVIO_PCT * 100) / 100;
+  const envioAuto = Math.round(subtotalNum * ENVIO_PCT * 100) / 100;
+  const [envioManual, setEnvioManual] = useState<string | null>(
+    initial && !initial.retira && Math.abs(Number(initial.envio) - Math.round(Number(initial.subtotal) * ENVIO_PCT * 100) / 100) > 0.001
+      ? String(initial.envio)
+      : null
+  );
+  const envio = retira ? 0 : envioManual !== null ? (Number(envioManual) || 0) : envioAuto;
   const total = subtotalNum + envio;
 
   const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
