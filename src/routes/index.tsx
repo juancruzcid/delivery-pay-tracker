@@ -58,8 +58,16 @@ function Index() {
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
+  const [missingDocsOnly, setMissingDocsOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
+
+  const isMissingDocs = (p: Payment) => {
+    if (Number(p.transferencia) > 0) {
+      return !p.recibo_pdf_path || !p.transferencia_pdf_path;
+    }
+    return false;
+  };
 
   const load = async () => {
     setLoading(true);
