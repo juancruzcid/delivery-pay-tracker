@@ -30,6 +30,8 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -56,6 +58,8 @@
   --ring: oklch(0.48 0.17 258);
   --success: oklch(0.58 0.16 155);
   --info: oklch(0.55 0.18 245);
+  --warning: oklch(0.62 0.15 65);
+  --warning-foreground: oklch(0.99 0 0);
 }
 
 @layer base {

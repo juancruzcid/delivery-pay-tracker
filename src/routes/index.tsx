@@ -58,8 +58,16 @@ function Index() {
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
+  const [missingDocsOnly, setMissingDocsOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
+
+  const isMissingDocs = (p: Payment) => {
+    if (Number(p.transferencia) > 0) {
+      return !p.recibo_pdf_path || !p.transferencia_pdf_path;
+    }
+    return false;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -82,9 +90,12 @@ function Index() {
       if (search && !p.cliente.toLowerCase().includes(search.toLowerCase())) return false;
       if (dateFilter && p.fecha !== dateFilter) return false;
       if (monthFilter && !p.fecha.startsWith(monthFilter)) return false;
+      if (missingDocsOnly && !isMissingDocs(p)) return false;
       return true;
     });
-  }, [payments, search, dateFilter, monthFilter]);
+  }, [payments, search, dateFilter, monthFilter, missingDocsOnly]);
+
+  const missingDocsCount = useMemo(() => payments.filter(isMissingDocs).length, [payments]);
 
   const totals = useMemo(() => {
     return filtered.reduce(
@@ -133,7 +144,7 @@ function Index() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Registro de Pagos</h1>
@@ -191,6 +202,28 @@ function Index() {
           </select>
         </div>
 
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMissingDocsOnly((v) => !v)}
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+              missingDocsOnly
+                ? "border-warning/40 bg-warning/15 text-warning"
+                : "border-border bg-card text-muted-foreground hover:bg-accent"
+            }`}
+            title="Muestra solo pagos con transferencia que no tienen recibo o comprobante cargado"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            {missingDocsOnly ? "Mostrando faltantes" : "Faltan documentos"}
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              missingDocsCount > 0 ? "bg-warning text-warning-foreground" : "bg-muted text-muted-foreground"
+            }`}>
+              {missingDocsCount}
+            </span>
+          </button>
+        </div>
+
+
         <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -214,7 +247,7 @@ function Index() {
                   <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">No hay pagos registrados.</td></tr>
                 ) : (
                   filtered.map((p) => (
-                    <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                    <tr key={p.id} className={`border-b border-border last:border-0 hover:bg-muted/30 ${isMissingDocs(p) ? "bg-warning/5" : ""}`}>
                       <td className="whitespace-nowrap px-4 py-3">{fmtDate(p.fecha)}</td>
                       <td className="px-4 py-3 font-sans font-medium">{p.cliente}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">$ {fmtMoney(p.monto)}</td>
