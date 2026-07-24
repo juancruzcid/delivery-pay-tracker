@@ -277,7 +277,7 @@ function Index() {
                           onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
                           className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
                         >
-                          <option value="retiro">Retiro</option>
+                          <option value="retiro">Retirado</option>
                           <option value="pendiente">Pendiente</option>
                           <option value="enviado">Enviado</option>
                         </select>
