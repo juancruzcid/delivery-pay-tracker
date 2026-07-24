@@ -252,7 +252,7 @@ function Index() {
                   <th className="px-4 py-3">Fecha</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 text-right">Monto</th>
-                  <th className="px-4 py-3 text-center">Envío</th>
+                  <th className="px-4 py-3 text-center">Estado</th>
                   <th className="px-4 py-3 text-right">Transferencia</th>
                   <th className="px-4 py-3 text-right">Efectivo</th>
                   <th className="px-4 py-3">Observaciones</th>
