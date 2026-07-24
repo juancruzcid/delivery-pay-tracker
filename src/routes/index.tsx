@@ -92,11 +92,13 @@ function Index() {
       if (dateFilter && p.fecha !== dateFilter) return false;
       if (monthFilter && !p.fecha.startsWith(monthFilter)) return false;
       if (missingDocsOnly && !isMissingDocs(p)) return false;
+      if (pendingOnly && p.estado_envio !== "pendiente") return false;
       return true;
     });
-  }, [payments, search, dateFilter, monthFilter, missingDocsOnly]);
+  }, [payments, search, dateFilter, monthFilter, missingDocsOnly, pendingOnly]);
 
   const missingDocsCount = useMemo(() => payments.filter(isMissingDocs).length, [payments]);
+  const pendingCount = useMemo(() => payments.filter((p) => p.estado_envio === "pendiente").length, [payments]);
 
   const totals = useMemo(() => {
     return filtered.reduce(
