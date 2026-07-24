@@ -224,6 +224,23 @@ function Index() {
               {missingDocsCount}
             </span>
           </button>
+          <button
+            type="button"
+            onClick={() => setPendingOnly((v) => !v)}
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+              pendingOnly
+                ? "border-warning/40 bg-warning/15 text-warning"
+                : "border-border bg-card text-muted-foreground hover:bg-accent"
+            }`}
+            title="Muestra solo pedidos con estado Pendiente"
+          >
+            {pendingOnly ? "Mostrando pendientes" : "Envíos pendientes"}
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              pendingCount > 0 ? "bg-warning text-warning-foreground" : "bg-muted text-muted-foreground"
+            }`}>
+              {pendingCount}
+            </span>
+          </button>
         </div>
 
 
