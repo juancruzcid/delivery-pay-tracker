@@ -30,7 +30,7 @@ type Payment = {
 };
 
 const ESTADO_LABEL: Record<EstadoEnvio, string> = {
-  retiro: "Retiro",
+  retiro: "Retirado",
   pendiente: "Pendiente",
   enviado: "Enviado",
 };
