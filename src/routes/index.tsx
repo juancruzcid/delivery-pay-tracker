@@ -59,6 +59,7 @@ function Index() {
   const [dateFilter, setDateFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [missingDocsOnly, setMissingDocsOnly] = useState(false);
+  const [pendingOnly, setPendingOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
 
