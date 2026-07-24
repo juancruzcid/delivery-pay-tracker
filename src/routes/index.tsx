@@ -30,7 +30,7 @@ type Payment = {
 };
 
 const ESTADO_LABEL: Record<EstadoEnvio, string> = {
-  retiro: "Retiro",
+  retiro: "Retirado",
   pendiente: "Pendiente",
   enviado: "Enviado",
 };
@@ -59,6 +59,7 @@ function Index() {
   const [dateFilter, setDateFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [missingDocsOnly, setMissingDocsOnly] = useState(false);
+  const [pendingOnly, setPendingOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
 
@@ -91,11 +92,13 @@ function Index() {
       if (dateFilter && p.fecha !== dateFilter) return false;
       if (monthFilter && !p.fecha.startsWith(monthFilter)) return false;
       if (missingDocsOnly && !isMissingDocs(p)) return false;
+      if (pendingOnly && p.estado_envio !== "pendiente") return false;
       return true;
     });
-  }, [payments, search, dateFilter, monthFilter, missingDocsOnly]);
+  }, [payments, search, dateFilter, monthFilter, missingDocsOnly, pendingOnly]);
 
   const missingDocsCount = useMemo(() => payments.filter(isMissingDocs).length, [payments]);
+  const pendingCount = useMemo(() => payments.filter((p) => p.estado_envio === "pendiente").length, [payments]);
 
   const totals = useMemo(() => {
     return filtered.reduce(
@@ -221,6 +224,23 @@ function Index() {
               {missingDocsCount}
             </span>
           </button>
+          <button
+            type="button"
+            onClick={() => setPendingOnly((v) => !v)}
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+              pendingOnly
+                ? "border-warning/40 bg-warning/15 text-warning"
+                : "border-border bg-card text-muted-foreground hover:bg-accent"
+            }`}
+            title="Muestra solo pedidos con estado Pendiente"
+          >
+            {pendingOnly ? "Mostrando pendientes" : "Envíos pendientes"}
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              pendingCount > 0 ? "bg-warning text-warning-foreground" : "bg-muted text-muted-foreground"
+            }`}>
+              {pendingCount}
+            </span>
+          </button>
         </div>
 
 
@@ -232,7 +252,7 @@ function Index() {
                   <th className="px-4 py-3">Fecha</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 text-right">Monto</th>
-                  <th className="px-4 py-3 text-center">Envío</th>
+                  <th className="px-4 py-3 text-center">Estado</th>
                   <th className="px-4 py-3 text-right">Transferencia</th>
                   <th className="px-4 py-3 text-right">Efectivo</th>
                   <th className="px-4 py-3">Observaciones</th>
@@ -257,7 +277,7 @@ function Index() {
                           onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
                           className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
                         >
-                          <option value="retiro">Retiro</option>
+                          <option value="retiro">Retirado</option>
                           <option value="pendiente">Pendiente</option>
                           <option value="enviado">Enviado</option>
                         </select>
