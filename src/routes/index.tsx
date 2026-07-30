@@ -164,16 +164,42 @@ function Index() {
               Cargá y buscá los pagos de los pedidos que repartís.
             </p>
           </div>
-          <button
-            onClick={() => {
-              setEditing(null);
-              setShowForm(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Nuevo pago
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowReport(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+            >
+              <FileText className="h-4 w-4" /> Informe mensual
+            </button>
+            {canEdit ? (
+              <>
+                <button
+                  onClick={() => {
+                    setEditing(null);
+                    setShowForm(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+                >
+                  <Plus className="h-4 w-4" /> Nuevo pago
+                </button>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent"
+                >
+                  Salir
+                </button>
+              </>
+            ) : (
+              <a
+                href="/auth"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+              >
+                Ingresar
+              </a>
+            )}
+          </div>
         </div>
+
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="VENDIDO" amount={totals.vendido} />
