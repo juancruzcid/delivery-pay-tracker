@@ -36,7 +36,7 @@ const ESTADO_LABEL: Record<EstadoEnvio, string> = {
 };
 
 const ESTADO_CLASS: Record<EstadoEnvio, string> = {
-  retiro: "bg-muted text-foreground border-border",
+  retiro: "bg-success/15 text-success border-success/30",
   pendiente: "bg-warning/15 text-warning border-warning/30",
   enviado: "bg-success/15 text-success border-success/30",
 };
@@ -392,7 +392,7 @@ function Index() {
           {filtered.length} {filtered.length === 1 ? "registro" : "registros"}
         </p>
 
-        <MonthlyCharts payments={payments} />
+        {canEdit && <MonthlyCharts payments={payments} />}
       </div>
 
       {showForm && (
@@ -875,11 +875,23 @@ function MonthlyReport({
             </tfoot>
           </table>
 
-          <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
-            <span className="text-sm font-semibold text-muted-foreground">
-              Comisión ({Math.round(ENVIO_PCT * 100)}% de pedidos)
-            </span>
-            <span className="font-mono tabular text-lg font-bold text-success">$ {fmtMoney(comision)}</span>
+          <div className="mt-4 space-y-2 rounded-lg border border-border bg-muted/40 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-muted-foreground">
+                Comisión ({Math.round(ENVIO_PCT * 100)}% de pedidos)
+              </span>
+              <span className="font-mono tabular text-sm font-bold">$ {fmtMoney(comision)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-muted-foreground">Envíos</span>
+              <span className="font-mono tabular text-sm font-bold">$ {fmtMoney(totalEnvios)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-2">
+              <span className="text-sm font-semibold text-foreground">Total comisión + envíos</span>
+              <span className="font-mono tabular text-lg font-bold text-success">
+                $ {fmtMoney(Math.round((comision + totalEnvios) * 100) / 100)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
