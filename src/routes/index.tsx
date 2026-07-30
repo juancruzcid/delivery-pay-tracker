@@ -62,6 +62,15 @@ function Index() {
   const [pendingOnly, setPendingOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
+  const [canEdit, setCanEdit] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setCanEdit(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setCanEdit(!!session));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
 
   const isMissingDocs = (p: Payment) => {
     if (Number(p.transferencia) > 0) {
@@ -155,16 +164,42 @@ function Index() {
               Cargá y buscá los pagos de los pedidos que repartís.
             </p>
           </div>
-          <button
-            onClick={() => {
-              setEditing(null);
-              setShowForm(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Nuevo pago
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowReport(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+            >
+              <FileText className="h-4 w-4" /> Informe mensual
+            </button>
+            {canEdit ? (
+              <>
+                <button
+                  onClick={() => {
+                    setEditing(null);
+                    setShowForm(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+                >
+                  <Plus className="h-4 w-4" /> Nuevo pago
+                </button>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent"
+                >
+                  Salir
+                </button>
+              </>
+            ) : (
+              <a
+                href="/auth"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+              >
+                Ingresar
+              </a>
+            )}
+          </div>
         </div>
+
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="VENDIDO" amount={totals.vendido} />
@@ -272,16 +307,23 @@ function Index() {
                       <td className="px-4 py-3 font-sans font-medium">{p.cliente}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">$ {fmtMoney(p.monto)}</td>
                       <td className="px-4 py-3 text-center">
-                        <select
-                          value={p.estado_envio}
-                          onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
-                          className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
-                        >
-                          <option value="retiro">Retirado</option>
-                          <option value="pendiente">Pendiente</option>
-                          <option value="enviado">Enviado</option>
-                        </select>
+                        {canEdit ? (
+                          <select
+                            value={p.estado_envio}
+                            onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
+                            className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
+                          >
+                            <option value="retiro">Retirado</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="enviado">Enviado</option>
+                          </select>
+                        ) : (
+                          <span className={`inline-block rounded-md border px-2 py-1 text-xs font-sans font-semibold ${ESTADO_CLASS[p.estado_envio]}`}>
+                            {ESTADO_LABEL[p.estado_envio]}
+                          </span>
+                        )}
                       </td>
+
 
                       <td className="whitespace-nowrap px-4 py-3 text-right text-info">
                         {p.transferencia > 0 ? `$ ${fmtMoney(p.transferencia)}` : <span className="text-muted-foreground">—</span>}
@@ -297,11 +339,12 @@ function Index() {
                           {p.recibo_pdf_path && (
                             <button
                               onClick={() => downloadPdf(p.recibo_pdf_path!)}
-                              title="Descargar recibo"
+                              title="Descargar pedido"
                               className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs font-medium hover:bg-accent"
                             >
-                              <FileText className="h-3 w-3" /> Recibo
+                              <FileText className="h-3 w-3" /> Pedido
                             </button>
+
                           )}
                           {p.transferencia_pdf_path && (
                             <button
@@ -318,21 +361,26 @@ function Index() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-2 py-3 text-right">
-                        <button
-                          onClick={() => { setEditing(p); setShowForm(true); }}
-                          className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                          title="Editar"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => remove(p)}
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {canEdit && (
+                          <>
+                            <button
+                              onClick={() => { setEditing(p); setShowForm(true); }}
+                              className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                              title="Editar"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => remove(p)}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
                       </td>
+
                     </tr>
                   ))
                 )}
@@ -355,6 +403,16 @@ function Index() {
           onSaved={() => { setShowForm(false); load(); }}
         />
       )}
+
+      {showReport && (
+        <MonthlyReport
+          payments={payments}
+          months={months}
+          defaultMonth={monthFilter || months[0] || new Date().toISOString().slice(0, 7)}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
     </div>
   );
 }
@@ -652,7 +710,7 @@ function PaymentForm({
         </div>
 
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FileField label="PDF de recibo" existing={reciboPath} file={reciboFile} onFile={setReciboFile} onRemove={removeReciboPdf} />
+          <FileField label="PDF del pedido" existing={reciboPath} file={reciboFile} onFile={setReciboFile} onRemove={removeReciboPdf} />
           <FileField label="PDF de transferencia" existing={transfPath} file={transfFile} onFile={setTransfFile} onRemove={removeTransfPdf} />
         </div>
 
@@ -728,6 +786,103 @@ function FileField({
           className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:opacity-90"
         />
       )}
+    </div>
+  );
+}
+
+function MonthlyReport({
+  payments,
+  months,
+  defaultMonth,
+  onClose,
+}: {
+  payments: Payment[];
+  months: string[];
+  defaultMonth: string;
+  onClose: () => void;
+}) {
+  const [mes, setMes] = useState(defaultMonth);
+  const rows = useMemo(
+    () =>
+      payments
+        .filter((p) => p.fecha.startsWith(mes))
+        .slice()
+        .sort((a, b) => a.fecha.localeCompare(b.fecha)),
+    [payments, mes]
+  );
+  const totalPedidos = rows.reduce((a, p) => a + (Number(p.subtotal) || 0), 0);
+  const totalEnvios = rows.reduce((a, p) => a + (Number(p.envio) || 0), 0);
+  const comision = Math.round(totalPedidos * ENVIO_PCT * 100) / 100;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-foreground/40 p-4 backdrop-blur-sm print:static print:bg-transparent print:p-0">
+      <div className="my-8 w-full max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-xl print:my-0 print:border-0 print:shadow-none">
+        <div className="flex items-center justify-between gap-3 print:hidden">
+          <h2 className="text-lg font-semibold">Informe mensual</h2>
+          <div className="flex items-center gap-2">
+            <select
+              value={mes}
+              onChange={(e) => setMes(e.target.value)}
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none"
+            >
+              {(months.includes(mes) ? months : [mes, ...months]).map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => window.print()}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Imprimir / PDF
+            </button>
+            <button type="button" onClick={onClose} className="rounded-md p-1 hover:bg-accent">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <h3 className="text-base font-semibold text-foreground">Informe mensual — {mes}</h3>
+          <table className="mt-3 w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="py-2">Fecha</th>
+                <th className="py-2">Cliente</th>
+                <th className="py-2 text-right">Pedido</th>
+                <th className="py-2 text-right">Envío</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono tabular">
+              {rows.length === 0 ? (
+                <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">Sin registros en este mes.</td></tr>
+              ) : (
+                rows.map((p) => (
+                  <tr key={p.id} className="border-b border-border/60">
+                    <td className="whitespace-nowrap py-2">{fmtDate(p.fecha)}</td>
+                    <td className="py-2 font-sans">{p.cliente}</td>
+                    <td className="py-2 text-right">$ {fmtMoney(Number(p.subtotal))}</td>
+                    <td className="py-2 text-right">$ {fmtMoney(Number(p.envio))}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border font-mono tabular font-bold">
+                <td className="py-2" colSpan={2}>TOTALES</td>
+                <td className="py-2 text-right">$ {fmtMoney(totalPedidos)}</td>
+                <td className="py-2 text-right">$ {fmtMoney(totalEnvios)}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
+            <span className="text-sm font-semibold text-muted-foreground">
+              Comisión ({Math.round(ENVIO_PCT * 100)}% de pedidos)
+            </span>
+            <span className="font-mono tabular text-lg font-bold text-success">$ {fmtMoney(comision)}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
