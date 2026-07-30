@@ -710,7 +710,7 @@ function PaymentForm({
         </div>
 
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FileField label="PDF de recibo" existing={reciboPath} file={reciboFile} onFile={setReciboFile} onRemove={removeReciboPdf} />
+          <FileField label="PDF del pedido" existing={reciboPath} file={reciboFile} onFile={setReciboFile} onRemove={removeReciboPdf} />
           <FileField label="PDF de transferencia" existing={transfPath} file={transfFile} onFile={setTransfFile} onRemove={removeTransfPdf} />
         </div>
 
@@ -786,6 +786,103 @@ function FileField({
           className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:opacity-90"
         />
       )}
+    </div>
+  );
+}
+
+function MonthlyReport({
+  payments,
+  months,
+  defaultMonth,
+  onClose,
+}: {
+  payments: Payment[];
+  months: string[];
+  defaultMonth: string;
+  onClose: () => void;
+}) {
+  const [mes, setMes] = useState(defaultMonth);
+  const rows = useMemo(
+    () =>
+      payments
+        .filter((p) => p.fecha.startsWith(mes))
+        .slice()
+        .sort((a, b) => a.fecha.localeCompare(b.fecha)),
+    [payments, mes]
+  );
+  const totalPedidos = rows.reduce((a, p) => a + (Number(p.subtotal) || 0), 0);
+  const totalEnvios = rows.reduce((a, p) => a + (Number(p.envio) || 0), 0);
+  const comision = Math.round(totalPedidos * ENVIO_PCT * 100) / 100;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-foreground/40 p-4 backdrop-blur-sm print:static print:bg-transparent print:p-0">
+      <div className="my-8 w-full max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-xl print:my-0 print:border-0 print:shadow-none">
+        <div className="flex items-center justify-between gap-3 print:hidden">
+          <h2 className="text-lg font-semibold">Informe mensual</h2>
+          <div className="flex items-center gap-2">
+            <select
+              value={mes}
+              onChange={(e) => setMes(e.target.value)}
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none"
+            >
+              {(months.includes(mes) ? months : [mes, ...months]).map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => window.print()}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Imprimir / PDF
+            </button>
+            <button type="button" onClick={onClose} className="rounded-md p-1 hover:bg-accent">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <h3 className="text-base font-semibold text-foreground">Informe mensual — {mes}</h3>
+          <table className="mt-3 w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="py-2">Fecha</th>
+                <th className="py-2">Cliente</th>
+                <th className="py-2 text-right">Pedido</th>
+                <th className="py-2 text-right">Envío</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono tabular">
+              {rows.length === 0 ? (
+                <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">Sin registros en este mes.</td></tr>
+              ) : (
+                rows.map((p) => (
+                  <tr key={p.id} className="border-b border-border/60">
+                    <td className="whitespace-nowrap py-2">{fmtDate(p.fecha)}</td>
+                    <td className="py-2 font-sans">{p.cliente}</td>
+                    <td className="py-2 text-right">$ {fmtMoney(Number(p.subtotal))}</td>
+                    <td className="py-2 text-right">$ {fmtMoney(Number(p.envio))}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border font-mono tabular font-bold">
+                <td className="py-2" colSpan={2}>TOTALES</td>
+                <td className="py-2 text-right">$ {fmtMoney(totalPedidos)}</td>
+                <td className="py-2 text-right">$ {fmtMoney(totalEnvios)}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
+            <span className="text-sm font-semibold text-muted-foreground">
+              Comisión ({Math.round(ENVIO_PCT * 100)}% de pedidos)
+            </span>
+            <span className="font-mono tabular text-lg font-bold text-success">$ {fmtMoney(comision)}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
