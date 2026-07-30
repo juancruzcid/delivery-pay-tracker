@@ -361,21 +361,26 @@ function Index() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-2 py-3 text-right">
-                        <button
-                          onClick={() => { setEditing(p); setShowForm(true); }}
-                          className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                          title="Editar"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => remove(p)}
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {canEdit && (
+                          <>
+                            <button
+                              onClick={() => { setEditing(p); setShowForm(true); }}
+                              className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                              title="Editar"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => remove(p)}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
                       </td>
+
                     </tr>
                   ))
                 )}
