@@ -307,16 +307,23 @@ function Index() {
                       <td className="px-4 py-3 font-sans font-medium">{p.cliente}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">$ {fmtMoney(p.monto)}</td>
                       <td className="px-4 py-3 text-center">
-                        <select
-                          value={p.estado_envio}
-                          onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
-                          className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
-                        >
-                          <option value="retiro">Retirado</option>
-                          <option value="pendiente">Pendiente</option>
-                          <option value="enviado">Enviado</option>
-                        </select>
+                        {canEdit ? (
+                          <select
+                            value={p.estado_envio}
+                            onChange={(e) => setEstado(p, e.target.value as EstadoEnvio)}
+                            className={`rounded-md border px-2 py-1 text-xs font-sans font-semibold outline-none ${ESTADO_CLASS[p.estado_envio]}`}
+                          >
+                            <option value="retiro">Retirado</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="enviado">Enviado</option>
+                          </select>
+                        ) : (
+                          <span className={`inline-block rounded-md border px-2 py-1 text-xs font-sans font-semibold ${ESTADO_CLASS[p.estado_envio]}`}>
+                            {ESTADO_LABEL[p.estado_envio]}
+                          </span>
+                        )}
                       </td>
+
 
                       <td className="whitespace-nowrap px-4 py-3 text-right text-info">
                         {p.transferencia > 0 ? `$ ${fmtMoney(p.transferencia)}` : <span className="text-muted-foreground">—</span>}
