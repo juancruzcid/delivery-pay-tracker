@@ -62,6 +62,15 @@ function Index() {
   const [pendingOnly, setPendingOnly] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
+  const [canEdit, setCanEdit] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setCanEdit(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setCanEdit(!!session));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
 
   const isMissingDocs = (p: Payment) => {
     if (Number(p.transferencia) > 0) {
