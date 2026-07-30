@@ -339,11 +339,12 @@ function Index() {
                           {p.recibo_pdf_path && (
                             <button
                               onClick={() => downloadPdf(p.recibo_pdf_path!)}
-                              title="Descargar recibo"
+                              title="Descargar pedido"
                               className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs font-medium hover:bg-accent"
                             >
-                              <FileText className="h-3 w-3" /> Recibo
+                              <FileText className="h-3 w-3" /> Pedido
                             </button>
+
                           )}
                           {p.transferencia_pdf_path && (
                             <button
