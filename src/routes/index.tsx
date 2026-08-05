@@ -422,6 +422,17 @@ function Index() {
         />
       )}
 
+      {showBackup && (
+        <BackupModal
+          payments={payments}
+          months={months}
+          defaultMonth={monthFilter || months[0] || new Date().toISOString().slice(0, 7)}
+          onClose={() => setShowBackup(false)}
+        />
+      )}
+
+
+
     </div>
   );
 }
