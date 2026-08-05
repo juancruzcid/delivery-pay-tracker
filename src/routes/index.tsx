@@ -64,6 +64,8 @@ function Index() {
   const [editing, setEditing] = useState<Payment | null>(null);
   const [canEdit, setCanEdit] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showBackup, setShowBackup] = useState(false);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setCanEdit(!!data.session));
@@ -73,11 +75,11 @@ function Index() {
 
 
   const isMissingDocs = (p: Payment) => {
-    if (Number(p.transferencia) > 0) {
-      return !p.recibo_pdf_path || !p.transferencia_pdf_path;
-    }
+    if (!p.recibo_pdf_path) return true;
+    if (Number(p.transferencia) > 0 && !p.transferencia_pdf_path) return true;
     return false;
   };
+
 
   const load = async () => {
     setLoading(true);
@@ -165,15 +167,22 @@ function Index() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setShowReport(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
-            >
-              <FileText className="h-4 w-4" /> Informe mensual
-            </button>
             {canEdit ? (
               <>
                 <button
+                  onClick={() => setShowReport(true)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+                >
+                  <FileText className="h-4 w-4" /> Informe mensual
+                </button>
+                <button
+                  onClick={() => setShowBackup(true)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+                >
+                  <Download className="h-4 w-4" /> Backup mensual
+                </button>
+                <button
+
                   onClick={() => {
                     setEditing(null);
                     setShowForm(true);
@@ -412,6 +421,17 @@ function Index() {
           onClose={() => setShowReport(false)}
         />
       )}
+
+      {showBackup && (
+        <BackupModal
+          payments={payments}
+          months={months}
+          defaultMonth={monthFilter || months[0] || new Date().toISOString().slice(0, 7)}
+          onClose={() => setShowBackup(false)}
+        />
+      )}
+
+
 
     </div>
   );
@@ -894,6 +914,148 @@ function MonthlyReport({
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function BackupModal({
+  payments,
+  months,
+  defaultMonth,
+  onClose,
+}: {
+  payments: Payment[];
+  months: string[];
+  defaultMonth: string;
+  onClose: () => void;
+}) {
+  const [mes, setMes] = useState(defaultMonth);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const rows = useMemo(
+    () =>
+      payments
+        .filter((p) => p.fecha.startsWith(mes))
+        .slice()
+        .sort((a, b) => a.fecha.localeCompare(b.fecha)),
+    [payments, mes]
+  );
+
+  const csvCell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+  const run = async () => {
+    setBusy(true);
+    setStatus("Preparando backup...");
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+
+      const header = [
+        "Fecha", "Cliente", "Subtotal", "Envio", "Total", "Estado",
+        "Transferencia", "Efectivo", "Observaciones", "PDF pedido", "PDF transferencia",
+      ];
+      const csv = [
+        header.join(";"),
+        ...rows.map((p) =>
+          [
+            p.fecha, p.cliente, Number(p.subtotal), Number(p.envio), Number(p.monto),
+            ESTADO_LABEL[p.estado_envio], Number(p.transferencia), Number(p.efectivo),
+            p.observaciones ?? "", p.recibo_pdf_path ?? "", p.transferencia_pdf_path ?? "",
+          ].map(csvCell).join(";")
+        ),
+      ].join("\n");
+      zip.file(`pedidos-${mes}.csv`, "\uFEFF" + csv);
+      zip.file(`pedidos-${mes}.json`, JSON.stringify(rows, null, 2));
+
+      const totalPedidos = rows.reduce((a, p) => a + (Number(p.subtotal) || 0), 0);
+      const totalEnvios = rows.reduce((a, p) => a + (Number(p.envio) || 0), 0);
+      const comision = Math.round(totalPedidos * ENVIO_PCT * 100) / 100;
+      const informe = [
+        `Informe mensual ${mes}`,
+        "",
+        ["Fecha", "Cliente", "Pedido", "Envio"].join(";"),
+        ...rows.map((p) => [p.fecha, p.cliente, Number(p.subtotal), Number(p.envio)].map(csvCell).join(";")),
+        "",
+        `Total pedidos;${totalPedidos}`,
+        `Total envios;${totalEnvios}`,
+        `Comision 5%;${comision}`,
+        `Comision + envios;${Math.round((comision + totalEnvios) * 100) / 100}`,
+        `Cantidad de pedidos;${rows.length}`,
+      ].join("\n");
+      zip.file(`informe-${mes}.csv`, "\uFEFF" + informe);
+
+      const docs = zip.folder("documentos")!;
+      const paths = rows.flatMap((p) =>
+        [
+          p.recibo_pdf_path ? { path: p.recibo_pdf_path, label: `${p.fecha}-${p.cliente}-pedido` } : null,
+          p.transferencia_pdf_path ? { path: p.transferencia_pdf_path, label: `${p.fecha}-${p.cliente}-transferencia` } : null,
+        ].filter(Boolean) as { path: string; label: string }[]
+      );
+
+      for (let i = 0; i < paths.length; i++) {
+        setStatus(`Descargando documentos ${i + 1}/${paths.length}...`);
+        const { data, error } = await supabase.storage.from(BUCKET).download(paths[i].path);
+        if (error || !data) continue;
+        const ext = paths[i].path.split(".").pop() || "pdf";
+        const safe = paths[i].label.replace(/[^a-zA-Z0-9-_]+/g, "_");
+        docs.file(`${safe}.${ext}`, data);
+      }
+
+      setStatus("Generando archivo...");
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `backup-${mes}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus("Listo ✔");
+    } catch (e) {
+      setStatus("Error al generar el backup.");
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Backup mensual</h2>
+          <button type="button" onClick={onClose} className="rounded-md p-1 hover:bg-accent">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Descarga un ZIP con los pedidos, los documentos adjuntos y el informe del mes elegido.
+        </p>
+
+        <label className="mt-5 block text-xs font-medium text-muted-foreground">Mes</label>
+        <select
+          value={mes}
+          onChange={(e) => setMes(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none"
+        >
+          {(months.includes(mes) ? months : [mes, ...months]).map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+
+        <p className="mt-3 text-sm text-muted-foreground">
+          {rows.length} pedido{rows.length === 1 ? "" : "s"} en {mes}.
+        </p>
+        {status && <p className="mt-2 text-sm font-medium text-foreground">{status}</p>}
+
+        <button
+          onClick={run}
+          disabled={busy || rows.length === 0}
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" /> {busy ? "Generando..." : "Descargar backup"}
+        </button>
       </div>
     </div>
   );
