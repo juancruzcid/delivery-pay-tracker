@@ -944,12 +944,16 @@ function BackupModal({
   );
 
   const csvCell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  // Excel es-AR: separador decimal coma (el punto se interpreta como miles)
+  const num = (v: unknown) => (Math.round((Number(v) || 0) * 100) / 100).toFixed(2).replace(".", ",");
 
   const run = async () => {
     setBusy(true);
     setStatus("Preparando backup...");
     try {
       const JSZip = (await import("jszip")).default;
+      const { jsPDF } = await import("jspdf");
+      const autoTable = (await import("jspdf-autotable")).default;
       const zip = new JSZip();
 
       const header = [
@@ -960,31 +964,69 @@ function BackupModal({
         header.join(";"),
         ...rows.map((p) =>
           [
-            p.fecha, p.cliente, Number(p.subtotal), Number(p.envio), Number(p.monto),
-            ESTADO_LABEL[p.estado_envio], Number(p.transferencia), Number(p.efectivo),
-            p.observaciones ?? "", p.recibo_pdf_path ?? "", p.transferencia_pdf_path ?? "",
-          ].map(csvCell).join(";")
+            csvCell(p.fecha), csvCell(p.cliente), num(p.subtotal), num(p.envio), num(p.monto),
+            csvCell(ESTADO_LABEL[p.estado_envio]), num(p.transferencia), num(p.efectivo),
+            csvCell(p.observaciones ?? ""), csvCell(p.recibo_pdf_path ?? ""), csvCell(p.transferencia_pdf_path ?? ""),
+          ].join(";")
         ),
       ].join("\n");
       zip.file(`pedidos-${mes}.csv`, "\uFEFF" + csv);
       zip.file(`pedidos-${mes}.json`, JSON.stringify(rows, null, 2));
 
-      const totalPedidos = rows.reduce((a, p) => a + (Number(p.subtotal) || 0), 0);
-      const totalEnvios = rows.reduce((a, p) => a + (Number(p.envio) || 0), 0);
+      const totalPedidos = Math.round(rows.reduce((a, p) => a + (Number(p.subtotal) || 0), 0) * 100) / 100;
+      const totalEnvios = Math.round(rows.reduce((a, p) => a + (Number(p.envio) || 0), 0) * 100) / 100;
       const comision = Math.round(totalPedidos * ENVIO_PCT * 100) / 100;
+      const comisionEnvios = Math.round((comision + totalEnvios) * 100) / 100;
       const informe = [
         `Informe mensual ${mes}`,
         "",
         ["Fecha", "Cliente", "Pedido", "Envio"].join(";"),
-        ...rows.map((p) => [p.fecha, p.cliente, Number(p.subtotal), Number(p.envio)].map(csvCell).join(";")),
+        ...rows.map((p) => [csvCell(p.fecha), csvCell(p.cliente), num(p.subtotal), num(p.envio)].join(";")),
         "",
-        `Total pedidos;${totalPedidos}`,
-        `Total envios;${totalEnvios}`,
-        `Comision 5%;${comision}`,
-        `Comision + envios;${Math.round((comision + totalEnvios) * 100) / 100}`,
+        `Total pedidos;${num(totalPedidos)}`,
+        `Total envios;${num(totalEnvios)}`,
+        `Comision 5%;${num(comision)}`,
+        `Comision + envios;${num(comisionEnvios)}`,
         `Cantidad de pedidos;${rows.length}`,
       ].join("\n");
       zip.file(`informe-${mes}.csv`, "\uFEFF" + informe);
+
+      // ---- PDFs ----
+      const pdfPedidos = new jsPDF({ orientation: "landscape" });
+      pdfPedidos.setFontSize(14);
+      pdfPedidos.text(`Pedidos ${mes}`, 14, 15);
+      autoTable(pdfPedidos, {
+        startY: 20,
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [30, 41, 59] },
+        head: [["Fecha", "Cliente", "Subtotal", "Envio", "Total", "Estado", "Transf.", "Efectivo", "Observaciones"]],
+        body: rows.map((p) => [
+          p.fecha, p.cliente, num(p.subtotal), num(p.envio), num(p.monto),
+          ESTADO_LABEL[p.estado_envio], num(p.transferencia), num(p.efectivo), p.observaciones ?? "",
+        ]),
+      });
+      zip.file(`pedidos-${mes}.pdf`, pdfPedidos.output("blob"));
+
+      const pdfInforme = new jsPDF();
+      pdfInforme.setFontSize(14);
+      pdfInforme.text(`Informe mensual ${mes}`, 14, 15);
+      autoTable(pdfInforme, {
+        startY: 20,
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [30, 41, 59] },
+        head: [["Fecha", "Cliente", "Pedido", "Envio"]],
+        body: rows.map((p) => [p.fecha, p.cliente, num(p.subtotal), num(p.envio)]),
+        foot: [
+          ["", "Total pedidos", num(totalPedidos), ""],
+          ["", "Total envios", num(totalEnvios), ""],
+          ["", `Comision ${Math.round(ENVIO_PCT * 100)}%`, num(comision), ""],
+          ["", "Comision + envios", num(comisionEnvios), ""],
+          ["", "Cantidad de pedidos", String(rows.length), ""],
+        ],
+        footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: "bold" },
+      });
+      zip.file(`informe-${mes}.pdf`, pdfInforme.output("blob"));
+
 
       const docs = zip.folder("documentos")!;
       const paths = rows.flatMap((p) =>
