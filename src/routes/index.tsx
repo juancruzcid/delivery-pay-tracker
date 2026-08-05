@@ -169,6 +169,12 @@ function Index() {
           <div className="flex flex-wrap items-center gap-2">
             {canEdit ? (
               <>
+                <Link
+                  to="/uso"
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+                >
+                  <Gauge className="h-4 w-4" /> Uso del plan
+                </Link>
                 <button
                   onClick={() => setShowReport(true)}
                   className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
