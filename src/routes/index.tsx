@@ -165,15 +165,22 @@ function Index() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setShowReport(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
-            >
-              <FileText className="h-4 w-4" /> Informe mensual
-            </button>
             {canEdit ? (
               <>
                 <button
+                  onClick={() => setShowReport(true)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+                >
+                  <FileText className="h-4 w-4" /> Informe mensual
+                </button>
+                <button
+                  onClick={() => setShowBackup(true)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+                >
+                  <Download className="h-4 w-4" /> Backup mensual
+                </button>
+                <button
+
                   onClick={() => {
                     setEditing(null);
                     setShowForm(true);
