@@ -64,6 +64,8 @@ function Index() {
   const [editing, setEditing] = useState<Payment | null>(null);
   const [canEdit, setCanEdit] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showBackup, setShowBackup] = useState(false);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setCanEdit(!!data.session));
