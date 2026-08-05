@@ -73,11 +73,11 @@ function Index() {
 
 
   const isMissingDocs = (p: Payment) => {
-    if (Number(p.transferencia) > 0) {
-      return !p.recibo_pdf_path || !p.transferencia_pdf_path;
-    }
+    if (!p.recibo_pdf_path) return true;
+    if (Number(p.transferencia) > 0 && !p.transferencia_pdf_path) return true;
     return false;
   };
+
 
   const load = async () => {
     setLoading(true);
