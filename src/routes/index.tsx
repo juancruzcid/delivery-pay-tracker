@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Calendar, FileText, Trash2, Download, X, Check, Pencil } from "lucide-react";
+import { Plus, Search, Calendar, FileText, Trash2, Download, X, Check, Pencil, Gauge } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const ENVIO_PCT = 0.05;
@@ -169,6 +169,12 @@ function Index() {
           <div className="flex flex-wrap items-center gap-2">
             {canEdit ? (
               <>
+                <Link
+                  to="/uso"
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+                >
+                  <Gauge className="h-4 w-4" /> Uso del plan
+                </Link>
                 <button
                   onClick={() => setShowReport(true)}
                   className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
