@@ -841,7 +841,7 @@ function MonthlyReport({
   const comision = Math.round(totalPedidos * ENVIO_PCT * 100) / 100;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-foreground/40 p-4 backdrop-blur-sm print:static print:bg-transparent print:p-0">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-foreground/40 p-4 backdrop-blur-sm print:static print:bg-transparent print:p-0 printable-area">
       <div className="my-8 w-full max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-xl print:my-0 print:border-0 print:shadow-none">
         <div className="flex items-center justify-between gap-3 print:hidden">
           <h2 className="text-lg font-semibold">Informe mensual</h2>
