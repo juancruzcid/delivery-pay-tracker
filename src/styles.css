@@ -71,3 +71,18 @@
   }
   .tabular { font-variant-numeric: tabular-nums; }
 }
+
+/* Impresión: solo se imprime el contenido marcado como imprimible */
+@media print {
+  body * { visibility: hidden !important; }
+  .printable-area, .printable-area * { visibility: visible !important; }
+  .printable-area {
+    position: absolute !important;
+    inset: 0 !important;
+    margin: 0 !important;
+    padding: 1rem !important;
+    background: #fff !important;
+  }
+  .no-print { display: none !important; }
+  @page { margin: 1.5cm; }
+}
