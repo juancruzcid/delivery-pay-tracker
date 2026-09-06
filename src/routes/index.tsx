@@ -170,6 +170,12 @@ function Index() {
             {canEdit ? (
               <>
                 <Link
+                  to="/clientes"
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
+                >
+                  <Users className="h-4 w-4" /> Clientes
+                </Link>
+                <Link
                   to="/uso"
                   className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-accent"
                 >
