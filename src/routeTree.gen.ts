@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UsoRouteImport } from './routes/uso'
+import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const UsoRoute = UsoRouteImport.update({
   id: '/uso',
   path: '/uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductosRoute = ProductosRouteImport.update({
+  id: '/productos',
+  path: '/productos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientesRoute = ClientesRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/clientes': typeof ClientesRoute
+  '/productos': typeof ProductosRoute
   '/uso': typeof UsoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/clientes': typeof ClientesRoute
+  '/productos': typeof ProductosRoute
   '/uso': typeof UsoRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/clientes': typeof ClientesRoute
+  '/productos': typeof ProductosRoute
   '/uso': typeof UsoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/clientes' | '/uso'
+  fullPaths: '/' | '/auth' | '/clientes' | '/productos' | '/uso'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/clientes' | '/uso'
-  id: '__root__' | '/' | '/auth' | '/clientes' | '/uso'
+  to: '/' | '/auth' | '/clientes' | '/productos' | '/uso'
+  id: '__root__' | '/' | '/auth' | '/clientes' | '/productos' | '/uso'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ClientesRoute: typeof ClientesRoute
+  ProductosRoute: typeof ProductosRoute
   UsoRoute: typeof UsoRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/uso'
       fullPath: '/uso'
       preLoaderRoute: typeof UsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/productos': {
+      id: '/productos'
+      path: '/productos'
+      fullPath: '/productos'
+      preLoaderRoute: typeof ProductosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clientes': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ClientesRoute: ClientesRoute,
+  ProductosRoute: ProductosRoute,
   UsoRoute: UsoRoute,
 }
 export const routeTree = rootRouteImport
