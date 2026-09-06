@@ -71,6 +71,38 @@ export type Database = {
         }
         Relationships: []
       }
+      pedido_items: {
+        Row: {
+          cantidad: number
+          created_at: string
+          id: string
+          payment_id: string
+          producto: string
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          id?: string
+          payment_id: string
+          producto: string
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          id?: string
+          payment_id?: string
+          producto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_items_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
