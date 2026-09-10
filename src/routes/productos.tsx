@@ -23,7 +23,7 @@ type Item = {
   producto: string;
   cantidad: number;
   payment_id: string;
-  payments: { fecha: string; cliente: string } | null;
+  payments: { fecha: string; cliente: string; subtotal: number } | null;
 };
 
 function ProductosPage() {
@@ -44,7 +44,7 @@ function ProductosPage() {
   const load = () => {
     supabase
       .from("pedido_items" as any)
-      .select("producto, cantidad, payment_id, payments(fecha, cliente)")
+      .select("producto, cantidad, payment_id, payments(fecha, cliente, subtotal)")
       .then(({ data }) => setItems(((data as unknown) as Item[]) ?? []));
   };
 
