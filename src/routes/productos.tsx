@@ -78,18 +78,38 @@ function ProductosPage() {
   }, [items, mes, q]);
 
   const run = async () => {
+    if (loading) return;
     setLoading(true);
     setResult(null);
+    let totalAnalizados = 0;
+    let totalItems = 0;
+    const errores: string[] = [];
     try {
-      const r = await analizar();
-      setResult(r);
-      load();
+      for (let i = 0; i < 40; i++) {
+        const r = await analizar();
+        totalAnalizados += r.analizados;
+        totalItems += r.items;
+        errores.push(...r.errores);
+        setResult({ analizados: totalAnalizados, items: totalItems, pendientes: r.pendientes, errores });
+        load();
+        if (r.pendientes === 0 || r.analizados === 0) break;
+      }
     } catch (e: any) {
-      setResult({ analizados: 0, items: 0, pendientes: 0, errores: [String(e?.message ?? e)] });
+      setResult({
+        analizados: totalAnalizados,
+        items: totalItems,
+        pendientes: 0,
+        errores: [...errores, String(e?.message ?? e)],
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session) void run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
 
   if (session === null) return null;
 
