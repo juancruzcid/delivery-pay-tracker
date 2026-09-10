@@ -61,12 +61,20 @@ function ProductosPage() {
   );
 
   const productos = useMemo(() => {
-    const map = new Map<string, { producto: string; cantidad: number; pedidos: Set<string>; clientes: Set<string> }>();
+    const map = new Map<string, { producto: string; cantidad: number; monto: number; pedidos: Set<string>; clientes: Set<string> }>();
+    const itemsPorPago = new Map<string, number>();
+    for (const i of items) {
+      if (i.producto === "(sin productos detectados)") continue;
+      itemsPorPago.set(i.payment_id, (itemsPorPago.get(i.payment_id) ?? 0) + Number(i.cantidad || 0));
+    }
     for (const i of items) {
       if (i.producto === "(sin productos detectados)") continue;
       if (mes && i.payments?.fecha?.slice(0, 7) !== mes) continue;
-      const cur = map.get(i.producto) ?? { producto: i.producto, cantidad: 0, pedidos: new Set(), clientes: new Set() };
-      cur.cantidad += Number(i.cantidad || 0);
+      const cur = map.get(i.producto) ?? { producto: i.producto, cantidad: 0, monto: 0, pedidos: new Set(), clientes: new Set() };
+      const cant = Number(i.cantidad || 0);
+      cur.cantidad += cant;
+      const totalPago = itemsPorPago.get(i.payment_id) ?? 0;
+      if (totalPago > 0) cur.monto += (Number(i.payments?.subtotal || 0) * cant) / totalPago;
       cur.pedidos.add(i.payment_id);
       if (i.payments?.cliente) cur.clientes.add(i.payments.cliente);
       map.set(i.producto, cur);
@@ -76,6 +84,12 @@ function ProductosPage() {
       .filter((p) => !term || p.producto.includes(term))
       .sort((a, b) => b.cantidad - a.cantidad);
   }, [items, mes, q]);
+
+  const top30Cantidad = productos.slice(0, 30);
+  const top30Monto = [...productos].sort((a, b) => b.monto - a.monto).slice(0, 30);
+
+  const fmt = (n: number) =>
+    n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
   const run = async () => {
     if (loading) return;
