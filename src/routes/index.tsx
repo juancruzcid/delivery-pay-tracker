@@ -645,6 +645,9 @@ function PaymentForm({
       alert("Error al guardar: " + error.message);
       return;
     }
+    if (newReciboPath) {
+      void analizarPedidos().catch(() => {});
+    }
     onSaved();
   };
 
