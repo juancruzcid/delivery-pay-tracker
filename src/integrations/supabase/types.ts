@@ -74,6 +74,7 @@ export type Database = {
       pedido_items: {
         Row: {
           cantidad: number
+          categoria: string
           created_at: string
           id: string
           payment_id: string
@@ -81,6 +82,7 @@ export type Database = {
         }
         Insert: {
           cantidad?: number
+          categoria?: string
           created_at?: string
           id?: string
           payment_id: string
@@ -88,6 +90,7 @@ export type Database = {
         }
         Update: {
           cantidad?: number
+          categoria?: string
           created_at?: string
           id?: string
           payment_id?: string
