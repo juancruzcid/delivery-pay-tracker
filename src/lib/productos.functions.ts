@@ -56,7 +56,7 @@ export const analizarPedidos = createServerFn({ method: "POST" })
               {
                 role: "system",
                 content:
-                  "Extraés los productos de un pedido. Respondé SOLO un JSON con la forma {\"items\":[{\"producto\":\"nombre normalizado en minúsculas\",\"cantidad\":number}]}. Ignorá totales, envíos, impuestos y datos del cliente. Si no hay productos devolvé {\"items\":[]}.",
+                  "Extraés los productos de un pedido. Respondé SOLO un JSON con la forma {\"items\":[{\"producto\":\"nombre normalizado en minúsculas\",\"cantidad\":number,\"categoria\":\"categoria\"}]}. La categoria debe ser una sola de: 'bebidas','alimentos','lacteos','panaderia','limpieza','snacks','otros'. Ignorá totales, envíos, impuestos y datos del cliente. Si no hay productos devolvé {\"items\":[]}.",
               },
               { role: "user", content: texto },
             ],
@@ -74,12 +74,14 @@ export const analizarPedidos = createServerFn({ method: "POST" })
         const raw = json?.choices?.[0]?.message?.content ?? "";
         const match = raw.match(/\{[\s\S]*\}/);
         const parsed = match ? JSON.parse(match[0]) : { items: [] };
+        const cats = ["bebidas","alimentos","lacteos","panaderia","limpieza","snacks","otros"];
         const rows = (parsed.items ?? [])
           .filter((i: any) => i?.producto)
           .map((i: any) => ({
             payment_id: p.id,
             producto: String(i.producto).trim().toLowerCase().slice(0, 120),
             cantidad: Number(i.cantidad) > 0 ? Number(i.cantidad) : 1,
+            categoria: cats.includes(String(i.categoria).toLowerCase()) ? String(i.categoria).toLowerCase() : "otros",
           }));
 
         if (rows.length) {
@@ -89,7 +91,7 @@ export const analizarPedidos = createServerFn({ method: "POST" })
         } else {
           await supabaseAdmin
             .from("pedido_items")
-            .insert([{ payment_id: p.id, producto: "(sin productos detectados)", cantidad: 0 }]);
+            .insert([{ payment_id: p.id, producto: "(sin productos detectados)", cantidad: 0, categoria: "otros" }]);
         }
         analizados++;
       } catch (e: any) {
