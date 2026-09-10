@@ -1,0 +1,1 @@
+ALTER TABLE public.pedido_items ADD COLUMN IF NOT EXISTS categoria text NOT NULL DEFAULT 'otros'; GRANT SELECT, INSERT, UPDATE, DELETE ON public.pedido_items TO authenticated; GRANT ALL ON public.pedido_items TO service_role;

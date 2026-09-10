@@ -23,6 +23,7 @@ type Item = {
   producto: string;
   cantidad: number;
   payment_id: string;
+  categoria: string;
   payments: { fecha: string; cliente: string; subtotal: number } | null;
 };
 
@@ -41,10 +42,12 @@ function ProductosPage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const [categoria, setCategoria] = useState("");
+
   const load = () => {
     supabase
       .from("pedido_items" as any)
-      .select("producto, cantidad, payment_id, payments(fecha, cliente, subtotal)")
+      .select("producto, cantidad, payment_id, categoria, payments(fecha, cliente, subtotal)")
       .then(({ data }) => setItems(((data as unknown) as Item[]) ?? []));
   };
 
@@ -60,21 +63,20 @@ function ProductosPage() {
     [items],
   );
 
+  const categorias = useMemo(
+    () => Array.from(new Set(items.map((i) => i.categoria).filter(Boolean) as string[])).sort(),
+    [items],
+  );
+
   const productos = useMemo(() => {
-    const map = new Map<string, { producto: string; cantidad: number; monto: number; pedidos: Set<string>; clientes: Set<string> }>();
-    const itemsPorPago = new Map<string, number>();
-    for (const i of items) {
-      if (i.producto === "(sin productos detectados)") continue;
-      itemsPorPago.set(i.payment_id, (itemsPorPago.get(i.payment_id) ?? 0) + Number(i.cantidad || 0));
-    }
+    const map = new Map<string, { producto: string; cantidad: number; pedidos: Set<string>; clientes: Set<string>; categoria: string }>();
     for (const i of items) {
       if (i.producto === "(sin productos detectados)") continue;
       if (mes && i.payments?.fecha?.slice(0, 7) !== mes) continue;
-      const cur = map.get(i.producto) ?? { producto: i.producto, cantidad: 0, monto: 0, pedidos: new Set(), clientes: new Set() };
+      if (categoria && i.categoria !== categoria) continue;
+      const cur = map.get(i.producto) ?? { producto: i.producto, cantidad: 0, pedidos: new Set(), clientes: new Set(), categoria: i.categoria };
       const cant = Number(i.cantidad || 0);
       cur.cantidad += cant;
-      const totalPago = itemsPorPago.get(i.payment_id) ?? 0;
-      if (totalPago > 0) cur.monto += (Number(i.payments?.subtotal || 0) * cant) / totalPago;
       cur.pedidos.add(i.payment_id);
       if (i.payments?.cliente) cur.clientes.add(i.payments.cliente);
       map.set(i.producto, cur);
@@ -83,13 +85,9 @@ function ProductosPage() {
     return Array.from(map.values())
       .filter((p) => !term || p.producto.includes(term))
       .sort((a, b) => b.cantidad - a.cantidad);
-  }, [items, mes, q]);
+  }, [items, mes, q, categoria]);
 
   const top30Cantidad = productos.slice(0, 30);
-  const top30Monto = [...productos].sort((a, b) => b.monto - a.monto).slice(0, 30);
-
-  const fmt = (n: number) =>
-    n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
   const run = async () => {
     if (loading) return;
@@ -189,7 +187,7 @@ function ProductosPage() {
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -212,6 +210,18 @@ function ProductosPage() {
               </option>
             ))}
           </select>
+          <select
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+            className="rounded-lg border border-border bg-card px-3 py-3 text-sm capitalize text-foreground shadow-sm outline-none focus:border-primary"
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map((c) => (
+              <option key={c} value={c} className="capitalize">
+                {c}
+              </option>
+            ))}
+          </select>
           <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
             <Package className="h-4 w-4" /> {productos.length} productos distintos
           </div>
@@ -222,68 +232,62 @@ function ProductosPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">#</th>
-                  <th className="px-4 py-3 text-left font-semibold">Producto</th>
-                  <th className="px-4 py-3 text-right font-semibold">Unidades</th>
-                  <th className="px-4 py-3 text-right font-semibold">Pedidos</th>
-                  <th className="px-4 py-3 text-right font-semibold">Clientes</th>
-                  <th className="px-4 py-3 text-left font-semibold">Peso</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {productos.map((p, i) => (
-                  <tr key={p.producto} className="hover:bg-accent/40">
-                    <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
-                    <td className="px-4 py-3 font-medium capitalize text-foreground">{p.producto}</td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums">{p.cantidad}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.pedidos.size}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.clientes.size}</td>
-                    <td className="px-4 py-3">
-                      <div className="h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${(p.cantidad / maxCant) * 100}%` }} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {productos.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-                      Todavía no hay productos leídos. Tocá "Leer pedidos nuevos".
-                    </td>
-                  </tr>
-                )}
+                   <th className="px-4 py-3 text-left font-semibold">#</th>
+                   <th className="px-4 py-3 text-left font-semibold">Producto</th>
+                   <th className="px-4 py-3 text-left font-semibold">Categoría</th>
+                   <th className="px-4 py-3 text-right font-semibold">Unidades</th>
+                   <th className="px-4 py-3 text-right font-semibold">Pedidos</th>
+                   <th className="px-4 py-3 text-right font-semibold">Clientes</th>
+                   <th className="px-4 py-3 text-left font-semibold">Peso</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-border">
+                 {productos.map((p, i) => (
+                   <tr key={p.producto} className="hover:bg-accent/40">
+                     <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
+                     <td className="px-4 py-3 font-medium capitalize text-foreground">{p.producto}</td>
+                     <td className="px-4 py-3 capitalize text-muted-foreground">{p.categoria}</td>
+                     <td className="px-4 py-3 text-right font-semibold tabular-nums">{p.cantidad}</td>
+                     <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.pedidos.size}</td>
+                     <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.clientes.size}</td>
+                     <td className="px-4 py-3">
+                       <div className="h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-muted">
+                         <div className="h-full rounded-full bg-primary" style={{ width: `${(p.cantidad / maxCant) * 100}%` }} />
+                       </div>
+                     </td>
+                   </tr>
+                 ))}
+                 {productos.length === 0 && (
+                   <tr>
+                     <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                       Todavía no hay productos leídos. Tocá "Leer pedidos nuevos".
+                     </td>
+                   </tr>
+                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {[
-            { titulo: "Top 30 por cantidad", datos: top30Cantidad, porMonto: false },
-            { titulo: "Top 30 por monto (estimado)", datos: top30Monto, porMonto: true },
-          ].map(({ titulo, datos, porMonto }) => (
-            <div key={titulo} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-              <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">{titulo}</h2>
-              <table className="w-full text-sm">
-                <tbody className="divide-y divide-border">
-                  {datos.map((p, i) => (
-                    <tr key={p.producto} className="hover:bg-accent/40">
-                      <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
-                      <td className="px-4 py-2 font-medium capitalize text-foreground">{p.producto}</td>
-                      <td className="px-4 py-2 text-right font-semibold tabular-nums">
-                        {porMonto ? fmt(p.monto) : p.cantidad}
-                      </td>
-                    </tr>
-                  ))}
-                  {datos.length === 0 && (
-                    <tr>
-                      <td className="px-4 py-6 text-center text-muted-foreground">Sin datos todavía.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ))}
+        <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">Top 30 por cantidad</h2>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-border">
+              {top30Cantidad.map((p, i) => (
+                <tr key={p.producto} className="hover:bg-accent/40">
+                  <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
+                  <td className="px-4 py-2 font-medium capitalize text-foreground">{p.producto}</td>
+                  <td className="px-4 py-2 capitalize text-muted-foreground">{p.categoria}</td>
+                  <td className="px-4 py-2 text-right font-semibold tabular-nums">{p.cantidad}</td>
+                </tr>
+              ))}
+              {top30Cantidad.length === 0 && (
+                <tr>
+                  <td className="px-4 py-6 text-center text-muted-foreground">Sin datos todavía.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
