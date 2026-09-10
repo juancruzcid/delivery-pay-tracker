@@ -256,6 +256,35 @@ function ProductosPage() {
             </table>
           </div>
         </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {[
+            { titulo: "Top 30 por cantidad", datos: top30Cantidad, porMonto: false },
+            { titulo: "Top 30 por monto (estimado)", datos: top30Monto, porMonto: true },
+          ].map(({ titulo, datos, porMonto }) => (
+            <div key={titulo} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+              <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">{titulo}</h2>
+              <table className="w-full text-sm">
+                <tbody className="divide-y divide-border">
+                  {datos.map((p, i) => (
+                    <tr key={p.producto} className="hover:bg-accent/40">
+                      <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
+                      <td className="px-4 py-2 font-medium capitalize text-foreground">{p.producto}</td>
+                      <td className="px-4 py-2 text-right font-semibold tabular-nums">
+                        {porMonto ? fmt(p.monto) : p.cantidad}
+                      </td>
+                    </tr>
+                  ))}
+                  {datos.length === 0 && (
+                    <tr>
+                      <td className="px-4 py-6 text-center text-muted-foreground">Sin datos todavía.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
