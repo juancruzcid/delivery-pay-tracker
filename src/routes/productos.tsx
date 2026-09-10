@@ -232,36 +232,38 @@ function ProductosPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">#</th>
-                  <th className="px-4 py-3 text-left font-semibold">Producto</th>
-                  <th className="px-4 py-3 text-right font-semibold">Unidades</th>
-                  <th className="px-4 py-3 text-right font-semibold">Pedidos</th>
-                  <th className="px-4 py-3 text-right font-semibold">Clientes</th>
-                  <th className="px-4 py-3 text-left font-semibold">Peso</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {productos.map((p, i) => (
-                  <tr key={p.producto} className="hover:bg-accent/40">
-                    <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
-                    <td className="px-4 py-3 font-medium capitalize text-foreground">{p.producto}</td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums">{p.cantidad}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.pedidos.size}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.clientes.size}</td>
-                    <td className="px-4 py-3">
-                      <div className="h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${(p.cantidad / maxCant) * 100}%` }} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {productos.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-                      Todavía no hay productos leídos. Tocá "Leer pedidos nuevos".
-                    </td>
-                  </tr>
-                )}
+                   <th className="px-4 py-3 text-left font-semibold">#</th>
+                   <th className="px-4 py-3 text-left font-semibold">Producto</th>
+                   <th className="px-4 py-3 text-left font-semibold">Categoría</th>
+                   <th className="px-4 py-3 text-right font-semibold">Unidades</th>
+                   <th className="px-4 py-3 text-right font-semibold">Pedidos</th>
+                   <th className="px-4 py-3 text-right font-semibold">Clientes</th>
+                   <th className="px-4 py-3 text-left font-semibold">Peso</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-border">
+                 {productos.map((p, i) => (
+                   <tr key={p.producto} className="hover:bg-accent/40">
+                     <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
+                     <td className="px-4 py-3 font-medium capitalize text-foreground">{p.producto}</td>
+                     <td className="px-4 py-3 capitalize text-muted-foreground">{p.categoria}</td>
+                     <td className="px-4 py-3 text-right font-semibold tabular-nums">{p.cantidad}</td>
+                     <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.pedidos.size}</td>
+                     <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{p.clientes.size}</td>
+                     <td className="px-4 py-3">
+                       <div className="h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-muted">
+                         <div className="h-full rounded-full bg-primary" style={{ width: `${(p.cantidad / maxCant) * 100}%` }} />
+                       </div>
+                     </td>
+                   </tr>
+                 ))}
+                 {productos.length === 0 && (
+                   <tr>
+                     <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                       Todavía no hay productos leídos. Tocá "Leer pedidos nuevos".
+                     </td>
+                   </tr>
+                 )}
               </tbody>
             </table>
           </div>
