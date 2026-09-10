@@ -5,6 +5,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 
 const ENVIO_PCT = 0.05;
 import { supabase } from "@/integrations/supabase/client";
+import { analizarPedidos } from "@/lib/productos.functions";
 
 export const Route = createFileRoute("/")({
   component: Index,
