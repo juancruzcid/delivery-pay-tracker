@@ -87,7 +87,7 @@ function ProductosPage() {
       .sort((a, b) => b.cantidad - a.cantidad);
   }, [items, mes, q, categoria]);
 
-  const top30Cantidad = productos.slice(0, 30);
+  const top10Cantidad = productos.slice(0, 10);
 
   const run = async () => {
     if (loading) return;
@@ -270,10 +270,10 @@ function ProductosPage() {
         </div>
 
         <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">Top 30 por cantidad</h2>
+          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">Top 10 por cantidad</h2>
           <table className="w-full text-sm">
             <tbody className="divide-y divide-border">
-              {top30Cantidad.map((p, i) => (
+              {top10Cantidad.map((p, i) => (
                 <tr key={p.producto} className="hover:bg-accent/40">
                   <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
                   <td className="px-4 py-2 font-medium capitalize text-foreground">{p.producto}</td>
@@ -281,7 +281,7 @@ function ProductosPage() {
                   <td className="px-4 py-2 text-right font-semibold tabular-nums">{p.cantidad}</td>
                 </tr>
               ))}
-              {top30Cantidad.length === 0 && (
+              {top10Cantidad.length === 0 && (
                 <tr>
                   <td className="px-4 py-6 text-center text-muted-foreground">Sin datos todavía.</td>
                 </tr>
