@@ -17,10 +17,18 @@ export const analizarPedidos = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { extractText, getDocumentProxy } = await import("unpdf");
 
+    // Solo se leen los pedidos del mes en curso para no gastar créditos de IA con el historial.
+    const hoy = new Date();
+    const desde = `${hoy.getUTCFullYear()}-${String(hoy.getUTCMonth() + 1).padStart(2, "0")}-01`;
+    const finMes = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() + 1, 1));
+    const hasta = finMes.toISOString().slice(0, 10);
+
     const { data: pagos } = await supabaseAdmin
       .from("payments")
       .select("id, cliente, fecha, recibo_pdf_path")
       .not("recibo_pdf_path", "is", null)
+      .gte("fecha", desde)
+      .lt("fecha", hasta)
       .order("fecha", { ascending: false });
 
     const { data: yaHechos } = await supabaseAdmin.from("pedido_items").select("payment_id");
