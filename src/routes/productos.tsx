@@ -30,7 +30,7 @@ type Item = {
 function ProductosPage() {
   const [session, setSession] = useState<boolean | null>(null);
   const [items, setItems] = useState<Item[]>([]);
-  const [mes, setMes] = useState("");
+  const [mes, setMes] = useState(() => new Date().toISOString().slice(0, 7));
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalizarResult | null>(null);
@@ -118,10 +118,6 @@ function ProductosPage() {
     }
   };
 
-  useEffect(() => {
-    if (session) void run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
 
   if (session === null) return null;
 
@@ -223,7 +219,7 @@ function ProductosPage() {
             ))}
           </select>
           <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-            <Package className="h-4 w-4" /> {productos.length} productos distintos
+            <Package className="h-4 w-4" /> Top 10 de {productos.length} productos
           </div>
         </div>
 
@@ -242,7 +238,7 @@ function ProductosPage() {
                  </tr>
                </thead>
                <tbody className="divide-y divide-border">
-                 {productos.map((p, i) => (
+                 {top10Cantidad.map((p, i) => (
                    <tr key={p.producto} className="hover:bg-accent/40">
                      <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                      <td className="px-4 py-3 font-medium capitalize text-foreground">{p.producto}</td>
@@ -267,27 +263,6 @@ function ProductosPage() {
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">Top 10 por cantidad</h2>
-          <table className="w-full text-sm">
-            <tbody className="divide-y divide-border">
-              {top10Cantidad.map((p, i) => (
-                <tr key={p.producto} className="hover:bg-accent/40">
-                  <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
-                  <td className="px-4 py-2 font-medium capitalize text-foreground">{p.producto}</td>
-                  <td className="px-4 py-2 capitalize text-muted-foreground">{p.categoria}</td>
-                  <td className="px-4 py-2 text-right font-semibold tabular-nums">{p.cantidad}</td>
-                </tr>
-              ))}
-              {top10Cantidad.length === 0 && (
-                <tr>
-                  <td className="px-4 py-6 text-center text-muted-foreground">Sin datos todavía.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
