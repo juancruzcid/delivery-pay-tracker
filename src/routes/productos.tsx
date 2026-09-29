@@ -264,27 +264,6 @@ function ProductosPage() {
             </table>
           </div>
         </div>
-
-        <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">Top 10 por cantidad</h2>
-          <table className="w-full text-sm">
-            <tbody className="divide-y divide-border">
-              {top10Cantidad.map((p, i) => (
-                <tr key={p.producto} className="hover:bg-accent/40">
-                  <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
-                  <td className="px-4 py-2 font-medium capitalize text-foreground">{p.producto}</td>
-                  <td className="px-4 py-2 capitalize text-muted-foreground">{p.categoria}</td>
-                  <td className="px-4 py-2 text-right font-semibold tabular-nums">{p.cantidad}</td>
-                </tr>
-              ))}
-              {top10Cantidad.length === 0 && (
-                <tr>
-                  <td className="px-4 py-6 text-center text-muted-foreground">Sin datos todavía.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
