@@ -30,7 +30,7 @@ type Item = {
 function ProductosPage() {
   const [session, setSession] = useState<boolean | null>(null);
   const [items, setItems] = useState<Item[]>([]);
-  const [mes, setMes] = useState("");
+  const [mes, setMes] = useState(() => new Date().toISOString().slice(0, 7));
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalizarResult | null>(null);
@@ -118,10 +118,6 @@ function ProductosPage() {
     }
   };
 
-  useEffect(() => {
-    if (session) void run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
 
   if (session === null) return null;
 
