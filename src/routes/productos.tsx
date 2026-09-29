@@ -219,7 +219,7 @@ function ProductosPage() {
             ))}
           </select>
           <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-            <Package className="h-4 w-4" /> {productos.length} productos distintos
+            <Package className="h-4 w-4" /> Top 10 de {productos.length} productos
           </div>
         </div>
 
@@ -238,7 +238,7 @@ function ProductosPage() {
                  </tr>
                </thead>
                <tbody className="divide-y divide-border">
-                 {productos.map((p, i) => (
+                 {top10Cantidad.map((p, i) => (
                    <tr key={p.producto} className="hover:bg-accent/40">
                      <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                      <td className="px-4 py-3 font-medium capitalize text-foreground">{p.producto}</td>
